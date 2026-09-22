@@ -1,0 +1,4 @@
+name: jailjudge
+loader: jailjudge
+kwargs:
+  split: train

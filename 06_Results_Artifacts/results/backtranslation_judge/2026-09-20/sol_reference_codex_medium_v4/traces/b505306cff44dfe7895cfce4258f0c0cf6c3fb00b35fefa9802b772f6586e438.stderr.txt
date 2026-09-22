@@ -1,0 +1,5 @@
+2026-09-20T12:58:17.901658Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:58:17.924193Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:58:18.311303Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+2026-09-20T12:58:18.311553Z  WARN codex_core::session_startup_prewarm: startup websocket prewarm setup failed: unexpected status 403 Forbidden: Unknown error, url: wss://chatgpt.com/backend-api/codex/responses, cf-ray: a3e100366e66cd7c-EWR
+2026-09-20T12:58:25.578985Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf("/home/romainpopescu/.codex/shell_snapshots/01a0bee5-5da9-7981-91bf-536e586b8217.1789909097898153189.sh"): Os { code: 2, kind: NotFound, message: "No such file or directory" }

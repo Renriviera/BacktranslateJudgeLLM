@@ -1,0 +1,4 @@
+\begin{tikzpicture}\begin{axis}[researchplot,ybar,bar shift=0pt,bar width=18pt,width=16.5cm,height=9cm,ymin=0,ymax=.62,enlarge x limits=0.09,ylabel={Response drift at cycle six},symbolic x coords={PAP,PAIR,SlotGCG,IFEval,ARC,SQuAD,HumanEval,GSM8K},xtick={PAP,PAIR,SlotGCG,IFEval,ARC,SQuAD,HumanEval,GSM8K},x tick label style={rotate=25,anchor=east},nodes near coords,nodes near coords style={font=\fontsize{11}{13}\selectfont},point meta=y]
+\addplot+[area legend,fill=Attack,draw=Attack,nodes near coords style={text=Attack}] coordinates {(PAP,0.154) (PAIR,0.384) (SlotGCG,0.375)};
+\addplot+[area legend,fill=Reply,draw=Reply,nodes near coords style={text=Reply}] coordinates {(IFEval,0.530) (ARC,0.427) (SQuAD,0.412) (HumanEval,0.195) (GSM8K,0.123)};
+\legend{Attack family,Benign benchmark}\end{axis}\end{tikzpicture}

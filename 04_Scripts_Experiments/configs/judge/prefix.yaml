@@ -1,0 +1,2 @@
+# Prefix / refusal-string judge (no model; CPU string matching).
+kind: prefix

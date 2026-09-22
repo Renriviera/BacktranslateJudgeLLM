@@ -1,0 +1,6 @@
+# SlotGCG (position-aware GCG). Applies cached, fully-materialized attacked prompts;
+# run the optimizer separately to populate the cache.
+name: slotgcg
+kwargs:
+  cache_path: 06_Results_Artifacts/results/attacks/slotgcg/olmo31_instruct.json
+  strict: false

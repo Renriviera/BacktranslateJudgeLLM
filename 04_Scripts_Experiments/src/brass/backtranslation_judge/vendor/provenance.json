@@ -1,0 +1,10 @@
+{
+  "strongreject": {
+    "repository": "dsbowen/strong_reject",
+    "commit": "7a551d5b440ec7b75d4f6f5bb7c1719965b76b47"
+  },
+  "backtranslation": {
+    "repository": "YihanWang617/llm-jailbreaking-defense",
+    "commit": "6de4023dc21d9a9f87ac33424252c04e136c660f"
+  }
+}

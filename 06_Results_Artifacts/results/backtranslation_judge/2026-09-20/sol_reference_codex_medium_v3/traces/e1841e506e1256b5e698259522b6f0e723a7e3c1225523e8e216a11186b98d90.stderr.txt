@@ -1,0 +1,10 @@
+2026-09-20T12:45:10.913664Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:45:10.914036Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:45:10.914538Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:45:11.289260Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+2026-09-20T12:45:11.289555Z  WARN codex_core::session_startup_prewarm: startup websocket prewarm setup failed: unexpected status 403 Forbidden: Unknown error, url: wss://chatgpt.com/backend-api/codex/responses, cf-ray: a3e0ecff987333d5-EWR
+2026-09-20T12:45:11.703262Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+2026-09-20T12:45:11.703363Z  WARN codex_core::responses_retry: stream disconnected - retrying sampling request (1/5 in 187ms)... turn_id=01a0bed9-5b9d-7861-8ba9-b5fff53625f2 retries=1 max_retries=5 sampling_error=unexpected status 403 Forbidden: Unknown error, url: wss://chatgpt.com/backend-api/codex/responses, cf-ray: a3e0ed02c99b7206-EWR
+2026-09-20T12:45:12.216193Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+2026-09-20T12:45:12.216453Z  WARN codex_core::responses_retry: stream disconnected - retrying sampling request (2/5 in 405ms)... turn_id=01a0bed9-5b9d-7861-8ba9-b5fff53625f2 retries=2 max_retries=5 sampling_error=unexpected status 403 Forbidden: Unknown error, url: wss://chatgpt.com/backend-api/codex/responses, cf-ray: a3e0ed05982030f5-EWR
+2026-09-20T12:45:17.743159Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf("/home/romainpopescu/.codex/shell_snapshots/01a0bed9-5b66-7612-849f-7b0228e21f24.1789908310886762398.sh"): Os { code: 2, kind: NotFound, message: "No such file or directory" }

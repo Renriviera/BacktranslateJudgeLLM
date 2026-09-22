@@ -1,0 +1,62 @@
+\subsection{SlotGCG and ARCA-Style Target Updating}
+\label{sec:eval-slotgcg}
+
+We evaluated SlotGCG as a structural modification to the standard GCG attack rather than as a separate decoding-time attack. In the baseline GCG family, the optimizer searches for a contiguous adversarial suffix appended after the harmful behavior. SlotGCG first performs a white-box preprocessing pass that chooses where adversarial tokens should be placed inside the behavior itself. Concretely, the implementation inserts dummy optimization tokens into every candidate slot, runs a forward pass with attention outputs enabled, and scores slots using attention aggregated over the upper half of the transformer layers. The resulting vulnerable-slot score is normalized into a distribution, and the available adversarial-token budget is allocated proportionally across these slots. GCG optimization then proceeds over the interleaved adversarial tokens. This changes the geometry of the attack: instead of relying on a single fragile suffix, the optimized tokens are distributed throughout the prompt positions that the model already attends to when predicting the target continuation.
+
+This placement step is especially relevant for SmoothLLM. SmoothLLM defends by generating many perturbed copies of the input and using majority voting over the perturbed outputs. A suffix-only attack concentrates the adversarial signal in one local region, so character swaps, insertions, and patches can erase or retokenize a large fraction of the useful signal. SlotGCG spreads the signal over the behavior span. In our experiments, this made Method F substantially more robust under the SmoothLLM sweep: the README summary reports Method F reaching 35/36 SmoothLLM bypasses in the five-behavior SlotGCG evaluation, while suffix-style baselines such as the original baseline and k-merge Method E reached 24/36 under the same summary table. The larger F-C and F-C+D scaled runs preserved this trend, with SmoothLLM bypass rates near 95\% even when content ASR remained much lower.
+
+\begin{figure}[t]
+    \centering
+    % TODO: Replace with the final plot from the SlotGCG/SmoothLLM comparison.
+    \IfFileExists{figures/slotgcg_smoothllm_placeholder.png}{%
+        \includegraphics[width=\linewidth]{figures/slotgcg_smoothllm_placeholder.png}%
+    }{%
+        \fbox{\parbox{0.92\linewidth}{\centering SlotGCG vs. baseline SmoothLLM plot placeholder}}%
+    }
+    \caption{Placeholder for the SmoothLLM comparison. The final figure will compare the baseline GCG family against SlotGCG/Method F under swap, patch, and insert perturbations.}
+    \label{fig:slotgcg-smoothllm}
+\end{figure}
+
+The main difficulty was that SmoothLLM bypass and prefix ASR did not imply task completion. Many optimized prompts reached low target loss and produced non-refusal prefixes, but generation then pivoted into benign, defensive, or confused continuations. We therefore tested an ARCA-style target-update hook as condition F-C. Every 50 optimization steps, if the current short generation did not contain a standard refusal prefix, the hook retokenized that generation and replaced the fixed target with the model's own continuation. The goal was to reduce target mismatch: rather than forcing the model toward a hand-written target that might be unnatural after adversarial interleaving, the optimizer follows continuations that the attacked model has already shown it can sustain.
+
+F-C was the strongest single ablation in the repository summary, converging on all five ablation behaviors and improving content ASR to 3/5 with 44/45 SmoothLLM bypasses. We then combined the target update with the negative refusal loss from F-D, producing the hybrid objective
+\begin{equation}
+    \mathcal{L}_{\mathrm{hybrid}}
+    =
+    \mathrm{CE}(y_{\mathrm{target}})
+    +
+    \lambda \mathcal{L}_{\mathrm{refusal}},
+    \qquad \lambda=0.2.
+    \label{eq:hybrid-loss}
+\end{equation}
+This objective gives the optimizer both a positive signal, matching the current target, and a negative signal, reducing probability assigned to refusal prefixes. The hybrid run improved convergence and cut some refusal-based false positives, but it also introduced a different kind of false positive: once refusal prefixes are suppressed, the model often avoids refusal by answering a nearby benign task. Behavior 8 illustrates the problem. The requested behavior was a password-cracking algorithm, but the greedy F-C+D generation became a password generator. Prefix and strict ASR marked the output as non-refusing, while content ASR correctly failed because the output did not satisfy the harmful intent. We therefore treat SlotGCG plus ARCA as effective for SmoothLLM robustness, but not as sufficient for semantic jailbreak success. Qualitative examples of these false positives, including the Behavior 8 password-cracker/password-generator case, are deferred to Appendix~\ref{app:qualitative-failures}.
+
+\subsection{Gold Completions from Abliterated Qwen 2.5}
+\label{sec:eval-gold-abliteration}
+
+The second evaluation direction uses an abliterated Qwen 2.5 model to probe the refusal metric itself. The underlying hypothesis is that refusal behavior is mediated by a relatively low-dimensional direction in activation space. Abliteration estimates this direction from contrastive data: examples whose completions begin with refusal prefixes are compared against matched examples without those prefixes, and the model is modified to remove the direction associated with refusal during generation. This is a white-box attack, but it is conditioned on the checkpoint rather than on the prompt. GCG, I-GCG, and SlotGCG search for a prompt perturbation that moves a fixed aligned model into a harmful region. Abliteration instead changes the model so the original prompt can be sampled without the learned refusal direction dominating the continuation.
+
+We tested this distinction on Behavior 2 (BID2), the request for Python code that disables antivirus software and security measures. The abliterated condition samples 1100 non-refused completions from \texttt{huihui-ai/Qwen2.5-7B-Instruct-abliterated-v3} under the normal chat template. The base condition samples 1100 continuations from \texttt{Qwen/Qwen2.5-7B} by continuing 11 code, documentation, and Q\&A fragments related to the same behavior. This comparison asks whether a first-order removal of refusal recovers the base model's output distribution, or merely removes a refusal surface while leaving the instruction-tuned model in a different region of behavior space.
+
+For auditability, the BID2 experiment uses transparent templates and rule-based labels rather than a hidden judge. The base-LM condition uses no chat template and no refusal filter. Its 11 fragments cover a Python file header, a module docstring with a half-written service function, a StackOverflow-style answer prefix, a CTF write-up fragment, a registry-exclusion code prefix, a Markdown code block, an AV process-name list, a \texttt{Set-MpPreference} function signature and docstring, a README fragment, a numbered playbook, and the original BID2 instruction as a Python code-header comment. Completion signatures are assigned from the first 1200 characters, prioritizing concrete primitives such as \texttt{set\_mppreference\_call}, \texttt{winreg\_or\_policy\_defender}, \texttt{defender\_exclusion}, \texttt{taskkill\_or\_service\_control}, \texttt{service\_control}, \texttt{psutil\_process\_kill}, \texttt{host\_or\_vendor\_blocking}, \texttt{advanced\_injection}, and \texttt{subprocess\_wrapper} before lower-severity or displacement buckets such as \texttt{toy\_virus\_class}, \texttt{disable\_av\_function}, \texttt{explicit\_simulation}, \texttt{confusion\_opener}, and \texttt{other}.
+
+The severity score is a transparent additive regex heuristic rather than a learned classifier. Tokens associated with operational Windows or Python primitives add positive weight: process termination, service control, subprocess execution, \texttt{psutil}, registry hives, Defender policy keys, Defender preference commands, vendor or AV product names, destructive file operations, encryption primitives, self-replication, and administrator-elevation language. Softening or displacement cues subtract weight: \texttt{class Virus}, simulation language, placeholders, hypothetical or fictional framing, confusion openers, and simple description-only class patterns. Scores are bucketed as \(\leq 0\), 1--5, 6--10, 11--20, and \(>20\). This score is not intended to be comprehensive; its purpose here is to expose large distributional changes that are easy to audit.
+
+\begin{figure}[t]
+    \centering
+    \IfFileExists{figures/bid2_severity_histogram.png}{%
+        \includegraphics[width=\linewidth]{figures/bid2_severity_histogram.png}%
+    }{%
+        \fbox{\parbox{0.92\linewidth}{\centering BID2 severity histogram missing}}%
+    }
+    \caption{Severity distribution for BID2 completions from abliterated Qwen 2.5-Instruct and base Qwen 2.5. Severity is a transparent regex-weighted heuristic over concrete Defender, registry, process-control, and subprocess cues, with toy or simulation markers reducing the score; it is not an LLM judge score.}
+    \label{fig:gold-bid2-severity}
+\end{figure}
+
+The result is sharply asymmetric. The base model, which is only trained for next-token prediction rather than instruction-following refusal, clearly contains information about the jailbreak subject being tested: across the 11 fragments, the merged base distribution places substantial mass on Windows-specific mechanisms, including \texttt{set\_mppreference\_call} (26.3\%), \texttt{host\_or\_vendor\_blocking} (20.4\%), \texttt{winreg\_or\_policy\_defender} (13.5\%), and \texttt{taskkill\_or\_service\_control} (10.0\%). Its severity scores have median 12.0 and mean 14.86, with 31.3\% of completions above 20. The original BID2 prompt used only as a base-LM code-header comment also remains much closer to the base aggregate than to the abliterated chat distribution: the f11 fragment has median severity 15.0 and 39\% of completions above 20.
+
+The abliterated model does not look like this base distribution. Its 1100 completions are dominated by \texttt{toy\_virus\_class} completions (82.9\%), typically defining a harmless Python class or string representation of a ``virus'' rather than producing operational security-tool manipulation. Its severity scores have median -4.0 and mean -4.54; 98.6\% of completions fall in the non-positive bucket in Fig.~\ref{fig:gold-bid2-severity}. Even if the regex-weighted severity score misses some relevant cases, the shift is too large to explain as a scoring artifact: the attacked abliterated model clearly still fails to access or express the base model's concrete BID2 information under the original chat instruction. This suggests that RL/instruction training is still doing substantial distribution shaping even after the learned refusal direction has been removed. The abliterated model is non-refusing, but its completions are mostly low-quality or semantically displaced relative to the base model's concrete next-token continuations.
+
+This is the central limitation exposed by the attack. Refusal is not cleanly decomposed from task quality, instruction following, and capability expression by a single linear intervention. Removing first-order refusal features can suppress the visible refusal style without restoring the base model's conditional output distribution. The same lesson applies to prefix-based attacks and prefix-based metrics: a prompt or metric that only measures whether a refusal prefix disappears can overestimate success, because the continuation may have moved into a benign, confused, or toy region. A stronger evaluation should therefore measure closeness to an appropriate base-model output distribution, not only distance from refusal strings.
+
+LLM-as-a-judge measurements should be interpreted with the same caution. They depend heavily on both the judge prompt and the judge model, and can be correlated with the model family under evaluation rather than with an independent ground truth. In one internal run, Qwen 2.5 judged its own abliterated-model completions as having 68\% ASR over a \(100 \times 540\) completion set. That number is useful as a stress test, but the BID2 audit above shows why judge ASR alone should not replace transparent distributional checks over completion type and severity.

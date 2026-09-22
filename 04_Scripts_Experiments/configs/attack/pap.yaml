@@ -1,0 +1,8 @@
+# PAP (Persuasive Adversarial Prompt) - "Misrepresentation" technique (Zeng et al. 2024).
+# Black-box single-shot prompt rewriting: an attacker LLM (default Qwen3-32B, non-thinking)
+# mutates each behavior with an in-context persuasion template. Generate the cache first with
+# `04_Scripts_Experiments/scripts/attacks/run_pap.py`; this adapter just applies the cached PAPs.
+name: pap
+kwargs:
+  cache_path: 06_Results_Artifacts/results/attacks/pap/olmo3_7b_instruct.json
+  strict: false

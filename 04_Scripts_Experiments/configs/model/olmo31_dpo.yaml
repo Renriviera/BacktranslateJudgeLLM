@@ -1,0 +1,10 @@
+# DPO checkpoint (pre-RLVR alignment stage; chat template applied).
+name: olmo31_dpo
+hf_id: allenai/Olmo-3.1-32B-Instruct-DPO
+is_chat: true
+dtype: bfloat16
+max_model_len: 4096
+gpu_memory_utilization: 0.90
+tensor_parallel_size: 1
+revision: null
+trust_remote_code: true

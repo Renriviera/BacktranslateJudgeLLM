@@ -1,0 +1,31 @@
+# @package _global_
+# TAO target + judge run on the 100 cached StrongREJECT behaviors for OLMo-3-7B.
+# The dataset is filtered to the exact prompt ids present in 06_Results_Artifacts/results/attacks/tao/olmo3_7b_instruct.json
+# and the adapter is strict, so missing cache entries cannot silently fall back to original prompts.
+defaults:
+  - /model@subject_model: olmo3_7b_instruct
+  - /model@base_model: olmo3_7b_base
+  - /dataset@dataset: strongreject_tao100
+  - /attack@attack: tao
+  - /judge@judges.strongreject: strongreject_ft
+  - /judge@judges.harmbench: harmbench_llama
+  - /metric@metrics.prefix: prefix_asr
+  - /metric@metrics.judge: judge_asr
+  - /metric@metrics.brass: brass
+
+experiment_name: tao_strongreject100_olmo3_7b
+
+attack:
+  kwargs:
+    cache_path: 06_Results_Artifacts/results/attacks/tao/olmo3_7b_instruct.json
+    strict: true
+
+sampling:
+  n_prompts: 100        # exactly the cached TAO StrongREJECT subset
+  n_completions: 16
+  temperature: 1.0
+  top_p: 1.0
+  max_tokens: 256
+  base_max_tokens: 256
+
+system_prompt: null

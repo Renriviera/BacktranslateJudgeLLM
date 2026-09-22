@@ -1,0 +1,176 @@
+{
+  "source": "Authoritative Hydra configurations; model weights excluded",
+  "models": [
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/llama2_7b_chat.yaml",
+      "settings": {
+        "name": "llama2_7b_chat",
+        "hf_id": "meta-llama/Llama-2-7b-chat-hf",
+        "is_chat": true,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/olmo31_dpo.yaml",
+      "settings": {
+        "name": "olmo31_dpo",
+        "hf_id": "allenai/Olmo-3.1-32B-Instruct-DPO",
+        "is_chat": true,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/olmo31_instruct.yaml",
+      "settings": {
+        "name": "olmo31_instruct",
+        "hf_id": "allenai/Olmo-3.1-32B-Instruct",
+        "is_chat": true,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/olmo3_7b_base.yaml",
+      "settings": {
+        "name": "olmo3_7b_base",
+        "hf_id": "allenai/Olmo-3-1025-7B",
+        "is_chat": false,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/olmo3_7b_instruct.yaml",
+      "settings": {
+        "name": "olmo3_7b_instruct",
+        "hf_id": "allenai/Olmo-3-7B-Instruct",
+        "is_chat": true,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/olmo3_base.yaml",
+      "settings": {
+        "name": "olmo3_base",
+        "hf_id": "allenai/Olmo-3-1125-32B",
+        "is_chat": false,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/qwen3_32b.yaml",
+      "settings": {
+        "name": "qwen3_32b",
+        "hf_id": "Qwen/Qwen3-32B",
+        "is_chat": true,
+        "dtype": "bfloat16",
+        "max_model_len": 8192,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "model",
+      "config": "04_Scripts_Experiments/configs/model/vicuna_7b_v1_5.yaml",
+      "settings": {
+        "name": "vicuna_7b_v1_5",
+        "hf_id": "lmsys/vicuna-7b-v1.5",
+        "is_chat": true,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9,
+        "tensor_parallel_size": 1,
+        "revision": null,
+        "trust_remote_code": true
+      }
+    },
+    {
+      "group": "judge",
+      "config": "04_Scripts_Experiments/configs/judge/harmbench_llama.yaml",
+      "settings": {
+        "kind": "harmbench",
+        "model": {
+          "name": "harmbench_llama",
+          "hf_id": "cais/HarmBench-Llama-2-13b-cls",
+          "is_chat": false,
+          "dtype": "bfloat16",
+          "max_model_len": 2048,
+          "gpu_memory_utilization": 0.9,
+          "tensor_parallel_size": 1,
+          "revision": null,
+          "trust_remote_code": true
+        }
+      }
+    },
+    {
+      "group": "judge",
+      "config": "04_Scripts_Experiments/configs/judge/prefix.yaml",
+      "settings": {
+        "kind": "prefix"
+      }
+    },
+    {
+      "group": "judge",
+      "config": "04_Scripts_Experiments/configs/judge/strongreject_ft.yaml",
+      "settings": {
+        "kind": "strongreject_finetuned",
+        "threshold": 0.5,
+        "max_response_length": 512,
+        "model": {
+          "name": "strongreject_ft",
+          "hf_id": "google/gemma-2b",
+          "is_chat": false,
+          "dtype": "bfloat16",
+          "max_model_len": 2048,
+          "gpu_memory_utilization": 0.85,
+          "tensor_parallel_size": 1,
+          "revision": null,
+          "trust_remote_code": true,
+          "enable_lora": true,
+          "lora_path": "qylu4156/strongreject-15k-v1",
+          "max_lora_rank": 16,
+          "extra": {
+            "max_logprobs": 25
+          }
+        }
+      }
+    }
+  ]
+}

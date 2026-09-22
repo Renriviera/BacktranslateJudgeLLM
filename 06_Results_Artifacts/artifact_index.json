@@ -1,0 +1,124 @@
+{
+  "snapshot_date": "2026-09-22",
+  "attack_coverage": [
+    {
+      "attack": "pap_authority",
+      "target": "olmo3_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_authority_strongreject_olmo3_7b"
+    },
+    {
+      "attack": "pap_authority",
+      "target": "vicuna_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_authority_strongreject_vicuna_7b"
+    },
+    {
+      "attack": "pap_authority",
+      "target": "llama2_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_authority_strongreject_llama2_7b"
+    },
+    {
+      "attack": "pap_logic",
+      "target": "olmo3_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_logic_strongreject_olmo3_7b"
+    },
+    {
+      "attack": "pap_logic",
+      "target": "vicuna_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_logic_strongreject_vicuna_7b"
+    },
+    {
+      "attack": "pap_logic",
+      "target": "llama2_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_logic_strongreject_llama2_7b"
+    },
+    {
+      "attack": "pap_misrep",
+      "target": "olmo3_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_misrep_strongreject_olmo3_7b"
+    },
+    {
+      "attack": "pap_misrep",
+      "target": "vicuna_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_misrep_strongreject_vicuna_7b"
+    },
+    {
+      "attack": "pap_misrep",
+      "target": "llama2_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pap_misrep_strongreject_llama2_7b"
+    },
+    {
+      "attack": "pair",
+      "target": "olmo3_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pair_strongreject_olmo3_7b"
+    },
+    {
+      "attack": "pair",
+      "target": "vicuna_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pair_strongreject_vicuna_7b"
+    },
+    {
+      "attack": "pair",
+      "target": "llama2_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/pair_strongreject_llama2_7b"
+    },
+    {
+      "attack": "slotgcg",
+      "target": "olmo3_7b",
+      "status": "archived_evaluation",
+      "directory": "06_Results_Artifacts/results/slotgcg_strongreject_olmo3_7b"
+    },
+    {
+      "attack": "slotgcg",
+      "target": "vicuna_7b",
+      "status": "not_found",
+      "directory": null
+    },
+    {
+      "attack": "slotgcg",
+      "target": "llama2_7b",
+      "status": "smoke_only",
+      "directory": "06_Results_Artifacts/results/slotgcg_strongreject_llama2_7b_smoke"
+    }
+  ],
+  "studies": [
+    {
+      "path": "results/fp_robustness",
+      "type": "benign_adjacent_false_positive_studies"
+    },
+    {
+      "path": "results/orbits/2026-09-18-pilot",
+      "status": "queue_complete_with_errors",
+      "failed_inverse_surprisal_arms": [
+        "fixed_resampling",
+        "archived_success_starts"
+      ]
+    },
+    {
+      "path": "results/orbits/2026-09-19-size-32b",
+      "status": "recorded_final_verification_passed"
+    },
+    {
+      "path": "results/backtranslation_judge/2026-09-20",
+      "status": "human_reference_required"
+    },
+    {
+      "path": "results/backtranslation_judge/2026-09-20/sol_reference_codex_medium_v4",
+      "selected_records": 6376,
+      "scored_records": 6299,
+      "unresolved_records": 77,
+      "reference": "automated_not_human_gold"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# TAO-Attack (GCG-family suffix optimizer). Applies cached adversarial suffixes/prompts;
+# run the optimizer (gradient-based, HF transformers) separately to populate the cache.
+name: tao
+kwargs:
+  cache_path: 06_Results_Artifacts/results/attacks/tao/olmo31_instruct.json
+  suffix_join: " "
+  strict: false

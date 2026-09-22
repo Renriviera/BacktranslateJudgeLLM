@@ -1,0 +1,3 @@
+2026-09-20T13:31:02.376291Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T13:31:02.398911Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T13:31:10.787806Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf("/home/romainpopescu/.codex/shell_snapshots/01a0bf03-574d-7e01-893e-b9d7428a8ace.1789911062350637289.sh"): Os { code: 2, kind: NotFound, message: "No such file or directory" }

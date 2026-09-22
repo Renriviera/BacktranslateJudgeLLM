@@ -1,0 +1,36 @@
+# @package _global_
+# PAP "Logical Appeal" judges-only eval on Vicuna-7B-v1.5 over full StrongREJECT.
+# Reuses the target-agnostic cache from 04_Scripts_Experiments/scripts/attacks/run_pap.py --technique logical_appeal.
+defaults:
+  - /model@subject_model: vicuna_7b_v1_5
+  - /model@base_model: olmo3_7b_base
+  - /dataset@dataset: strongreject
+  - /attack@attack: pap
+  - /judge@judges.strongreject: strongreject_ft
+  - /judge@judges.harmbench: harmbench_llama
+  - /metric@metrics.prefix: prefix_asr
+  - /metric@metrics.judge: judge_asr
+  - /metric@metrics.brass: brass
+
+experiment_name: pap_logic_strongreject_vicuna_7b
+
+attack:
+  kwargs:
+    cache_path: 06_Results_Artifacts/results/attacks/pap/olmo3_7b_instruct.logical_appeal.json
+
+sampling:
+  n_prompts: 313
+  n_completions: 16
+  temperature: 1.0
+  top_p: 1.0
+  max_tokens: 256
+  base_max_tokens: 256
+
+system_prompt: null
+
+olmotrace:
+  enabled: false
+
+metrics:
+  brass:
+    enabled: false

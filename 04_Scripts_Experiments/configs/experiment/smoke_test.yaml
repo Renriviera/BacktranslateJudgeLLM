@@ -1,0 +1,27 @@
+# @package _global_
+# 15-prompt StrongREJECT smoke test: instruct + base completions, all three metric families,
+# plus OLMoTrace. Validates the full pipeline end to end (attack = identity => BRASS ~ 0).
+defaults:
+  - /model@subject_model: olmo31_instruct
+  - /model@base_model: olmo3_base
+  - /dataset@dataset: strongreject
+  - /attack@attack: none
+  - /judge@judges.strongreject: strongreject_ft
+  - /judge@judges.harmbench: harmbench_llama
+  - /metric@metrics.prefix: prefix_asr
+  - /metric@metrics.judge: judge_asr
+  - /metric@metrics.brass: brass
+
+experiment_name: smoke_test
+
+sampling:
+  n_prompts: 15
+  n_completions: 16
+  temperature: 1.0
+  top_p: 1.0
+  max_tokens: 256
+  # Base-model continuation can use a different budget if desired.
+  base_max_tokens: 256
+
+# Optional system prompt for the instruct model (null = none).
+system_prompt: null

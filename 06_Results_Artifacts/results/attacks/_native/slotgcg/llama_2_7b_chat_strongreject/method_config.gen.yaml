@@ -1,0 +1,23 @@
+default_method_hyperparameters:
+  num_test_cases_per_behavior: 1
+  num_steps: 8
+  adv_string_init: a
+  allow_non_ascii: false
+  search_width: 512
+  num_adv_string: 20
+  attention_temp: 8
+  use_prefix_cache: false
+  targets_path: /home/romainpopescu/Desktop/cursorProjects/BRASS/data/attacks/slotgcg/strongreject_targets.json
+  eval_steps: 1
+  early_stopping: false
+  early_stopping_min_loss: 0.01
+  eval_with_check_refusal: false
+  check_refusal_min_loss: 0.1
+olmo_slotgcg:
+  target_model:
+    model_name_or_path: meta-llama/Llama-2-7b-chat-hf
+    dtype: bfloat16
+    use_fast_tokenizer: true
+    trust_remote_code: false
+    attn_implementation: eager
+  targets_path: /home/romainpopescu/Desktop/cursorProjects/BRASS/data/attacks/slotgcg/strongreject_targets.json

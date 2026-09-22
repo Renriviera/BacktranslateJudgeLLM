@@ -1,0 +1,288 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[most]{tcolorbox}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+% Float placement tuning: let large (incl. full-width) figures sit at page
+% tops near their citations instead of being deferred to a float page.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.75}
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{1}
+\setcounter{totalnumber}{3}
+\setcounter{dbltopnumber}{2}
+
+\newcommand{\Base}{\mathsf{Base}}
+\newcommand{\Inst}{\mathsf{Inst}}
+\newcommand{\Model}{\mathsf{Model}}
+\newcommand{\DistComp}{\mathsf{DistComp}}
+\newcommand{\Prompt}{\mathsf{Prompt}}
+\newcommand{\Comp}{\mathsf{Comp}}
+\newcommand{\Seq}{\mathsf{Seq}}
+\newcommand{\Tok}{\mathsf{Tok}}
+\newcommand{\BRASS}{\mathrm{BRASS}}
+
+\title{BRASS: Base Relative Attack Success Score for Rigorous Evaluation of LLM Jailbreaks}
+
+\author{\IEEEauthorblockN{Author Name}
+\IEEEauthorblockA{Affiliation\\
+Email}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Jailbreak research commonly reports attack success rates (ASR) using refusal-prefix filters or LLM-as-a-judge scores. These measurements are easy to automate, but they often conflate genuine recovery of a model's latent harmful capability with non-refusal, dummy compliance, benign deflection, model confusion, or judge-dependent artifacts. We survey several recent attacks---SlotGCG, TAO-Attack, single-direction (refusal-direction) mediation, and model abliteration---and show that their reported success is entangled with the very metrics used to score them: prefix matching, perturbation-induced confusion, and LLM judges. This proposal introduces BRASS, the Base Relative Attack Success Score, a model-relative and distributional framework for evaluating whether an attacked instruct model moves back toward the completion distribution of its own base model. BRASS replaces the question ``did the model stop refusing?'' with the sharper question ``did the attack restore the aligned model toward its own base-model behavior distribution?'' The proposed study formalizes BRASS with a category-theoretic view of base models, post-training, prompt probes, attacks, and metric-enriched completion distributions; evaluates several distance functions; and validates the metric on the fully open OLMo 3 model flow, with cross-checks against StrongREJECT, HarmBench, JailbreakBench, JAILJUDGE, SORRY-Bench, XSTest, and OR-Bench.
+\end{abstract}
+
+\begin{IEEEkeywords}
+large language models, jailbreaks, red teaming, attack success rate, model evaluation, category theory, open-weight models
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Large language model capabilities have improved far faster than our ability to measure them. Benchmarks that were considered hard quickly saturate, forcing the community to rebuild its yardsticks. Abstract-reasoning evaluation is a clear example: ARC-AGI-1 was introduced in 2019 to measure fluid intelligence with novel tasks requiring minimal prior knowledge \cite{chollet2019measure}, but rapid progress on test-time adaptation pushed the field to release the difficulty-calibrated ARC-AGI-2 in 2025 \cite{chollet2025arcagi2}, and an interactive ARC-AGI-3 has since been announced \cite{arcprize2025}. The recurring pattern is that capability outruns measurement: a metric looks decisive until models learn to satisfy its surface form without exhibiting the underlying ability it was meant to certify.
+
+Jailbreak evaluation is a safety-critical instance of the same gap. White-box suffix optimization such as Greedy Coordinate Gradient (GCG) showed that discrete adversarial suffixes can transfer across aligned models \cite{zou2023universal}. Follow-on methods improve optimization efficiency \cite{jia2024improved}, learn generators for adversarial suffixes \cite{liao2024amplegcg}, produce stealthier natural-language attacks \cite{liu2023autodan}, and motivate defenses such as SmoothLLM \cite{robey2023smoothllm}. Mechanistic work even shows that refusal can be mediated by a single residual-stream direction \cite{arditi2024refusal}. Yet the dominant ways of scoring these attacks have barely changed. Prefix-based ASR treats a response as successful if it lacks refusal strings such as ``I cannot'' or ``I'm sorry.'' LLM-as-a-judge ASR replaces string filters with a second model, but the score then depends on the judge's knowledge, policy, calibration, and prompt sensitivity.
+
+Both approaches can miss the distinction that matters for safety evaluation: whether an attack recovers the subject model's own base-model behavior, rather than merely causing a visible refusal style to disappear. Figure~\ref{fig:brass-vs-asr} summarizes why: prefix ASR collapses qualitatively different completions into one ``success'' label, and LLM judges insert a second black box whose verdict reflects the judge as much as the subject model.
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{BRASS2.png}
+    \caption{BRASS preserves more behavioral structure than prefix ASR or LLM-as-a-judge ASR. Prefix ASR collapses distinct completion clusters into a refusal/non-refusal label. LLM-as-a-judge adds a second model-dependent projection. BRASS compares the attacked instruct distribution to the subject model's own base distribution using complementary distance signals.}
+    \label{fig:brass-vs-asr}
+\end{figure*}
+
+Let \(M\) denote a base model and \(I=\mathcal{R}(M)\) its post-trained instruct descendant, where \(\mathcal{R}\) may represent SFT, DPO, RLHF, RLVR, safety tuning, or another post-training transformation. For a behavior prompt \(p\), let \(E_p(M)\) be the base model's induced completion distribution, \(E_p(I)\) the clean instruct distribution, and \(E_{a(p)}(I)\) the attacked instruct distribution for an attack transformation \(a:p\mapsto a(p)\). Traditional ASR asks whether \(E_{a(p)}(I)\) contains a non-refusal or judge-approved response. BRASS instead asks whether
+\begin{equation}
+    E_{a(p)}(I) \approx E_p(M),
+\end{equation}
+under a distributional distance \(d\).
+
+\begin{tcolorbox}[colback=white,colframe=black,title={Base Relative Attack Success Score}]
+\begin{equation}
+\boxed{
+\BRASS_d(M,I,p,a)
+=
+1 -
+\frac{
+d(E_{a(p)}(I),E_p(M))
+}{
+d(E_p(I),E_p(M))+\epsilon
+}
+}
+\label{eq:brass}
+\end{equation}
+\end{tcolorbox}
+
+Equation~\eqref{eq:brass} is a normalized distance-recovery score. \(\BRASS\approx 1\) indicates that the attacked model has moved close to the base distribution, \(\BRASS\approx 0\) indicates little recovery relative to the clean instruct model, and \(\BRASS<0\) indicates movement farther away from the base distribution.
+
+This proposal makes four contributions. First, it critiques prefix ASR and LLM-as-a-judge ASR as lossy projections of a richer behavioral distribution, using recent attacks (SlotGCG and TAO-Attack) and a simple 2024 abliteration as worked examples. Second, it gives a category-theoretic model of base models, post-training, prompt probes, attacks, and completion distributions. Third, it introduces BRASS and a suite of candidate distances for base-relative recovery. Fourth, it grounds this framework empirically. Because the category-theoretic model reasons about transformations of billion-parameter, otherwise black-box systems, validating it requires a setting where every object in the diagram is observable. We therefore instantiate and stress-test BRASS on OLMo 3, a fully open model flow whose base, SFT, DPO, and Think/RL checkpoints---and whose open Dolma pretraining corpus, via OLMoTrace---let us confirm BRASS as rigorously as possible, from the training dataset, through every intermediate checkpoint, to the final aligned model \cite{olmo3,soldaini2024dolma,olmotrace2024}.
+
+\section{Jailbreaking Model}
+
+\subsection{LLMs as Next-Token Predictors}
+
+A base language model is fundamentally a next-token predictor. Given a token sequence, it outputs a distribution over the next token,
+\begin{equation}
+    M:\Seq \to \Delta(\Tok),
+\end{equation}
+where \(\Seq\) is the set of token sequences and \(\Delta(\Tok)\) is the probability simplex over the vocabulary. Pretraining fits the parameters \(\theta\) by minimizing the negative log-likelihood (cross-entropy) of the next token over a corpus \(\mathcal{D}\):
+\begin{equation}
+    \mathcal{L}_{\mathrm{NLL}}(\theta)
+    = -\,\mathbb{E}_{x\sim\mathcal{D}}
+    \sum_{t=1}^{T} \log p_\theta\!\left(x_t \mid x_{1:t-1}\right).
+    \label{eq:nll}
+\end{equation}
+By repeated autoregressive sampling, the trained model induces a distribution over whole completions,
+\begin{equation}
+    \widehat{M}:\Prompt \to \Delta(\Comp),
+\end{equation}
+where \(\Comp\) is the completion space.
+
+Post-training changes this distribution. It may move probability mass away from direct completions for harmful prompts and toward refusal, safety advice, benign redirection, or uncertainty. A jailbreak can therefore be understood as an attempt to locally bypass or invert the behavioral effect of post-training. It is not enough to show that refusal strings vanish; the stronger claim is that the attacked model again samples from a distribution resembling its base model on the same behavior. The next section gives a concrete case where this distinction is decisive, and motivates the more rigorous framework that follows.
+
+\subsection{Preliminary Evidence: Abliteration Does Not Imply Capability Recovery}
+
+A single, low-effort intervention is already enough to break both prefix ASR and LLM-as-a-judge ASR. We study Behavior 2 (BID2), a request for code that disables antivirus software and security measures. The abliterated condition samples 1100 non-refused completions from \texttt{huihui-ai/Qwen2.5-7B-Instruct-abliterated-v3} under the normal chat template, using a 2024-style first-order refusal-direction removal \cite{arditi2024refusal}. The base condition samples 1100 continuations from \texttt{Qwen/Qwen2.5-7B} using 11 code, documentation, and question-answer fragments related to the same behavior. The comparison asks whether removing refusal recovers the base model's output distribution or merely strips a refusal surface while leaving the instruction-tuned model in a different behavioral region.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\linewidth]{bid2_severity_histogram.png}
+    \caption{Severity distribution for BID2 completions from abliterated Qwen2.5-Instruct and base Qwen2.5. The 1100-completion abliterated sample is dominated by non-positive regex-weighted severity, while the 1100-completion base sample places substantial mass in higher-severity buckets.}
+    \label{fig:bid2-severity}
+\end{figure}
+
+The result is sharply asymmetric. The base distribution places substantial mass on concrete Windows and Python security-tool concepts, with a median regex-weighted severity of 12.0 and 31.3\% of completions above 20. The abliterated model does not resemble this base distribution: 82.9\% of its completions are toy-virus-class responses, its median severity is \(-4.0\), and 98.6\% of completions fall in the non-positive bucket in Fig.~\ref{fig:bid2-severity}. Yet because the abliterated model rarely emits a refusal prefix, prefix ASR scores nearly all of these completions as ``successful jailbreaks.'' An LLM judge fares no better: in a self-judging configuration, Qwen 2.5 rated its own abliterated completions at 68\% ASR over a \(100\times540\) completion set, certifying as harmful a distribution that is in fact dominated by toy code.
+
+This is the practical reason for BRASS, and the reason we want a more rigorous model. A simple linear intervention from 2024 suppresses visible refusal far more effectively than it restores the base model's conditional output distribution, and both conventional metrics reward the surface change rather than the missing capability. A robust jailbreak metric should therefore compare the attacked model with its own base distribution, not only with a refusal-prefix list or a judge score. The next section builds the framework that makes ``closeness to the base distribution'' precise.
+
+\section{Category-Theoretic Framework}
+\label{sec:framework}
+
+We begin from the classical picture of Section II: a model is a next-token predictor trained by minimizing the negative log-likelihood in Eq.~\eqref{eq:nll}, inducing a completion distribution \(\widehat{M}\). We now lift this picture to a higher-level framework that can talk about whole families of models, the transformations between them, and how a fixed behavior probes each one. We do not give the classical training objective itself a categorical formalization; it serves only as the starting point. Figure~\ref{fig:category-framework} illustrates the resulting diagram for harmless prompts, harmful prompts, and jailbreaks.
+
+\begin{figure*}[!t]
+    \centering
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{BRASS1PanelA.png}\\
+        \footnotesize (a) Harmless prompt: naturality approximately holds.
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{BRASS1PanelB.png}\\
+        \footnotesize (b) Harmful prompt: naturality fails by design.
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{BRASS1PanelC.png}\\
+        \footnotesize (c) Jailbreak: the attack tries to restore the square.
+    \end{minipage}
+    \caption{Category-theoretic view of post-training and attacks. For harmless prompts, post-training should preserve useful behavior distributions. For harmful prompts, safety post-training intentionally changes the distribution. A jailbreak claims success only when the attacked instruct distribution moves back toward the corresponding base-model distribution.}
+    \label{fig:category-framework}
+\end{figure*}
+
+Let \(\Base\) be a category whose objects are base next-token predictors and whose morphisms are transformations between base models, such as a checkpoint-to-checkpoint pretraining update or a distillation map. Let \(\Inst\) be a category whose objects are instruct or post-trained models and whose morphisms are transformations between them, for example a LoRA adaptation or a quantization. A post-training recipe is modeled as a functor between these two categories,
+\begin{equation}
+    \mathcal{R}:\Base \to \Inst,
+\end{equation}
+mapping a base model \(M\) to its instruct descendant \(I=\mathcal{R}(M)\). The functor \(\mathcal{R}\) (base \(\to\) instruct) is conceptually distinct from the morphisms inside either category (model \(\to\) model within one category): \(\mathcal{R}\) is the alignment process that crosses from one world to the other, whereas a morphism like LoRA or quantization stays within a single world.
+
+A prompt acts as a probe functor
+\begin{equation}
+    E_p:\Model \to \DistComp_d,
+\end{equation}
+where \(\DistComp_d\) is a metric-enriched category of completion distributions. Attacks act on prompts as transformations \(a:p\mapsto a(p)\), or more generally as a monoid action on a prompt category. A successful jailbreak approximately restores commutativity in completion-distribution space:
+\begin{equation}
+    E_{a(p)}(I) \approx E_p(M).
+\end{equation}
+Thus, BRASS measures whether the attacked instruct branch returns toward the base branch under \(d\).
+
+\section{Case Studies: SlotGCG and TAO-Attack}
+\label{sec:case-studies}
+
+To make the critique concrete, we examine two recent optimization-based attacks. Both report strong numbers, and both illustrate how reported success is entangled with prefix matching, perturbation-induced confusion, and LLM judges.
+
+\subsection{SlotGCG}
+
+\emph{Algorithm.} SlotGCG generalizes GCG beyond suffix-only attacks \cite{slotgcg2024}. For a prompt of length \(L\), it defines \(L+1\) insertion slots and introduces a Vulnerable Slot Score (VSS), computed from attention aggregated over the upper transformer layers, to estimate which positions are most susceptible. It then distributes the adversarial-token budget across the highest-VSS slots and runs GCG optimization over the interleaved tokens. The position search is attack-agnostic, adds roughly 200\,ms of preprocessing, and can be plugged into any optimization-based attack.
+
+\emph{Results.} The authors report about 14\% higher ASR than suffix-only GCG variants, faster convergence, and notably higher ASR under input-filtering and randomized defenses, including roughly 42\% higher ASR than baselines under defenses such as SmoothLLM, Erase-and-Check, perplexity filtering, RPO, SafeDecoding, and Llama-Guard-3.
+
+\emph{Evaluation.} Success is scored with a three-stage pipeline: a keyword/template refusal filter, a GPT-4 judge (also used for early stopping during optimization), and human verification, with ASR reported both with and without the human stage. The headline claim of interest is that SlotGCG attains \emph{higher} ASR under the SmoothLLM defense than with no defense at all---e.g., SmoothLLM-insert rising from 22\% to 76\%. The paper's own analysis attributes this to the scoring loop: marginally harmful outputs are misclassified as successful by the GPT-4 judge and trigger early stopping in the undefended setting, whereas the defense blocks these weak attacks before the judge, letting optimization continue. In other words, the perturbations introduced by SmoothLLM combine with the adversarial tokens to produce confused continuations that the keyword-plus-judge pipeline counts as success. These are false positives of the metric, not evidence that a defense makes a model easier to jailbreak. BRASS would flag exactly this case, because such confused outputs do not move toward the base model's completion distribution.
+
+\subsection{TAO-Attack}
+
+\emph{Algorithm.} TAO-Attack is a suffix optimizer built around a two-stage loss \cite{tao2024}. Stage one is a refusal-aware loss that pushes the model toward a fixed harmful target prefix \(x_T\) (e.g., ``Sure, here is\ldots'') while penalizing a set of collected refusal strings. Once the generated prefix matches the target, measured by \(\mathrm{Rouge\text{-}L}(x_T', x_T)\geq\tau\), the objective switches to a stage-two effectiveness-aware loss that penalizes ``pseudo-harmful'' outputs, with an LLM-based harmfulness check used inside the loop to detect them; if refusals reappear, optimization reverts to stage one. A direction-priority token optimization (DPTO) step ranks candidates by gradient-direction alignment before step magnitude.
+
+\emph{Results.} TAO-Attack reaches 100\% ASR on Llama-2-7B-Chat, Vicuna-7B, and Mistral-7B-Instruct, matching saturated I-GCG; under a stricter fixed-initialization protocol it converges in fewer iterations, and it transfers to closed models, reaching 82\% ASR on GPT-3.5 Turbo.
+
+\emph{Evaluation.} The reported ASR uses a three-stage pipeline: template-based matching (a refusal-prefix filter), a GPT-4 Turbo harmfulness check, and human annotation. The critical observation is that prefixes appear on \emph{both} sides of the experiment. The target prefix \(x_T\) is the stage-one optimization objective and the Rouge-L switching criterion, and a refusal-prefix filter is the first stage of the evaluation pipeline. The LLM judge similarly appears twice: as the in-loop pseudo-harmful detector and as the GPT-4 evaluator. The attack is thus co-designed with the very signals used to score it, so a high ASR partly measures agreement between the optimizer and the metric rather than recovered capability. BRASS avoids this circularity by fixing the reference object as the subject model's own base distribution \(E_p(M)\), which is independent of the attack's target string and of any judge.
+
+\section{Approach}
+
+\subsection{Attack Families Under Study}
+
+Beyond the two case studies, the proposal evaluates BRASS against a broad attack landscape. GCG optimizes adversarial suffix tokens with white-box gradients \cite{zou2023universal}. I-GCG improves this family with diverse target templates, multi-coordinate updates, and easy-to-hard initialization \cite{jia2024improved}. AmpleGCG trains a generative model of adversarial suffixes so that many candidate attacks can be sampled rapidly \cite{liao2024amplegcg}. AutoDAN represents a more semantically interpretable family of automated jailbreak prompts \cite{liu2023autodan}. SmoothLLM is included because randomized perturbation defenses expose how suffix fragility and response confusion can distort ASR \cite{robey2023smoothllm}. Abliteration and refusal-direction work \cite{arditi2024refusal}, together with MixAT and VERA, round out a set of attacks and trainings whose reported success can depend heavily on prefix matching, judge prompting, or other scalar projections of behavior \cite{mixat2024,vera2024}.
+
+\subsection{Why Prefix ASR Is Too Coarse}
+
+Prefix ASR can be modeled as a projection
+\begin{equation}
+    Q_{\mathrm{prefix}}:\DistComp \to [0,1].
+\end{equation}
+This projection is non-faithful: many distinct completion distributions map to the same scalar. A base-like harmful answer, a dummy answer, a benign-adjacent deflection, an off-topic response, a technical-looking hallucination, partial compliance, and a creative refusal without a listed prefix may all be counted as ``successful.'' Prefix ASR therefore destroys the structure that BRASS aims to preserve: semantic specificity, model-relative capability, and distributional recovery.
+
+\subsection{Why LLM-as-a-Judge Is Not a Neutral Oracle}
+
+LLM-as-a-judge introduces a second model-dependent map
+\begin{equation}
+    J_K:\DistComp \to \mathsf{Score},
+\end{equation}
+where \(K\) is the judge model. The score \(J_K(E_{a(p)}(I))\) reflects not only the subject model and attack, but also the judge's knowledge, scale, safety policy, calibration, and prompt sensitivity. A strong judge may penalize a small subject model's genuinely base-like but incomplete answer. A weak judge may accept technical-looking nonsense. A self-judge may share the generator's blind spots, as in the 68\% self-rated ASR of Section II. BRASS does not remove the value of judges as auxiliary validation, but it fixes the primary reference object as \(E_p(M)\), the subject model's own base distribution.
+
+\subsection{BRASS as Metric and Objective}
+
+For evaluation, BRASS uses Eq.~\eqref{eq:brass}. For attack development, the same principle can define a base-relative optimization objective:
+\begin{equation}
+    a^\star \in \arg\min_a d(E_{a(p)}(I),E_p(M)).
+\end{equation}
+This replaces target-string matching with an objective that asks whether the attacked model's behavior distribution approaches the base model's behavior distribution on the original prompt.
+
+\section{Evaluation Plan}
+
+\subsection{Candidate Distances}
+
+The first evaluation track compares distance functions \(d\). Embedding-distribution distances will embed multiple completions from \(E_p(M)\), \(E_p(I)\), and \(E_{a(p)}(I)\), then compare clouds using maximum mean discrepancy, Wasserstein distance, energy distance, or centroid cosine distance. This is the most scalable default variant.
+
+Base-likelihood recovery scores attacked completions under the base model, comparing \(\log P_M(y\mid p)\) for clean instruct and attacked instruct samples. Logit recovery compares next-token distributions \(P_M(\cdot\mid p)\), \(P_I(\cdot\mid p)\), and \(P_I(\cdot\mid a(p))\) with KL-style or Jensen-Shannon divergences. Activation recovery compares hidden states or residual-stream representations between base, clean instruct, and attacked instruct models. Deflection and dummy-response penalties detect cases where non-refusal has moved into toy examples, vague educational language, benign substitutions, or technical-looking nonsense rather than base-like task behavior.
+
+A composite distance can combine these signals:
+\begin{equation}
+    d_{\mathrm{BRASS}}
+    =
+    \lambda_1 d_{\mathrm{emb}}
+    +
+    \lambda_2 d_{\mathrm{likelihood}}
+    +
+    \lambda_3 d_{\mathrm{logit}}
+    +
+    \lambda_4 d_{\mathrm{act}}
+    +
+    \lambda_5 d_{\mathrm{deflection}}.
+\end{equation}
+The study will report individual variants before using any composite score, so that failure modes remain auditable.
+
+\subsection{Sampling and Uncertainty}
+
+The main runs will use adaptive sampling rather than very large per-behavior draws. A feasible plan is 100 behaviors, 64--128 base-model completions per behavior, 32--64 clean instruct completions, and 32--64 attacked instruct completions. This yields approximately 12,800--25,600 completions per checkpoint and attack family. Adaptive sampling begins with 32 completions, computes a BRASS estimate and confidence interval, stops early for clearly positive or null cases, and samples more only for ambiguous behaviors, capped at 128 or 256 completions. Uncertainty will be reported with bootstrap confidence intervals over behaviors, not only over completions.
+
+\subsection{Why OLMo 3 and Open Weights}
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{BRASS3.png}
+    \caption{OLMo checkpoint evaluation plan. Open model lineages allow BRASS to measure distance-to-base across training stages, rather than only on a final model. Clean harmful prompts, attacked harmful prompts, harmless prompts, and over-refusal traps can be tracked as trajectories through completion-distribution space.}
+    \label{fig:olmo-checkpoints}
+\end{figure*}
+
+OLMo 3 is central to the plan because it is, to our knowledge, the most complete fully open model flow available: the Allen Institute for AI releases not just final weights but the entire lifecycle---every training stage, intermediate checkpoint, and data dependency---at the 7B and 32B parameter scales \cite{olmo3}. We will work primarily with the 32B models (base, SFT, DPO, Think/RL, and an RL-Zero variant), which are large enough to exhibit nontrivial capability and refusal behavior while remaining tractable for repeated sampling.
+
+Open weights are not a convenience here but a requirement. BRASS needs the base model \(M\) as a reference object, base-model likelihoods \(\log P_M(y\mid p)\), next-token logits, and residual-stream activations---none of which are available for closed models. Equally important, OLMo's openness extends to data: OLMoTrace links model outputs back to the open Dolma pretraining corpus \cite{soldaini2024dolma,olmotrace2024}, so we can confirm a behavior not only against the base model's outputs but against the dataset the model was actually trained on. This lets us ask whether base-model completions are supported by genuine pretraining content rather than artifacts, while being careful not to overclaim perfect provenance. For a theory that reasons about transformations of billions of parameters and otherwise black-box models, this dataset-to-checkpoint observability is what makes a rigorous validation of BRASS possible.
+
+For each checkpoint stage \(C(s)\), the study computes clean and attacked distances to the final base distribution:
+\begin{align}
+    d(E_p(C(s)),E_p(M_{\mathrm{base}})),\\
+    d(E_{a(p)}(C(s)),E_p(M_{\mathrm{base}})).
+\end{align}
+This tracks when refusal emerges, when deflection emerges, whether base-like capability is masked rather than erased, and whether attacks recover base-like behavior differently across SFT, DPO, Think/RL, and RL-Zero variants, as illustrated in Fig.~\ref{fig:olmo-checkpoints}.
+
+\subsection{Benchmarks and External Validation}
+
+StrongREJECT is the primary final holdout because it measures both willingness and useful forbidden information, making it closer to BRASS than refusal-only metrics \cite{souly2024strongreject}. HarmBench and JailbreakBench provide broad red-team behavior coverage \cite{mazeika2024harmbench,chao2024jailbreakbench}. JAILJUDGE and SORRY-Bench are used to study judge and refusal evaluation behavior \cite{jailjudge2024,xie2024sorrybench}. XSTest and OR-Bench are over-refusal controls, ensuring that BRASS is not simply rewarding unsafe compliance on benign safety-adjacent prompts \cite{rottger2024xstest,cui2024orbench}.
+
+\section{Expected Claims and Conclusion}
+
+The proposed study aims to test seven claims. First, prefix ASR overestimates attack success by counting dummy responses, benign deflections, and confused outputs as successes. Second, LLM-as-a-judge ASR is judge-dependent and can confound subject-model capability with judge-model knowledge. Third, BRASS better distinguishes shallow non-refusal from base-like capability recovery. Fourth, abliteration-style attacks may remove refusal without restoring base behavior. Fifth, OLMo checkpoints reveal when safety behavior, deflection, and capability masking emerge. Sixth, StrongREJECT should correlate more closely with BRASS than prefix ASR because both are sensitive to response usefulness. Seventh, over-refusal benchmarks such as XSTest and OR-Bench help verify that BRASS does not mistake harmless safety-adjacent prompts for harmful attack success.
+
+BRASS reframes jailbreak evaluation around a model-relative reference distribution. The central question is not whether a model stopped refusing, but whether an attack restored approximate commutativity between the base-model behavior functor and the attacked instruct-model behavior functor.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

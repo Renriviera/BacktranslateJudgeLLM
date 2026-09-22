@@ -1,0 +1,10 @@
+# Llama-2-7B-Chat (TAO paper target; gated; chat template applied).
+name: llama2_7b_chat
+hf_id: meta-llama/Llama-2-7b-chat-hf
+is_chat: true
+dtype: bfloat16
+max_model_len: 4096
+gpu_memory_utilization: 0.90
+tensor_parallel_size: 1
+revision: null
+trust_remote_code: true

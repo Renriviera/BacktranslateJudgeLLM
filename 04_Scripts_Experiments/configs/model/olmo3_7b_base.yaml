@@ -1,0 +1,10 @@
+# Base model M for the 7B PAP run (next-token predictor; raw continuation, no chat template).
+name: olmo3_7b_base
+hf_id: allenai/Olmo-3-1025-7B
+is_chat: false
+dtype: bfloat16
+max_model_len: 4096
+gpu_memory_utilization: 0.90
+tensor_parallel_size: 1
+revision: null
+trust_remote_code: true

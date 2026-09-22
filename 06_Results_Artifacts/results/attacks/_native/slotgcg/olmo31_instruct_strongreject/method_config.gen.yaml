@@ -1,0 +1,23 @@
+default_method_hyperparameters:
+  num_test_cases_per_behavior: 1
+  num_steps: 3
+  adv_string_init: a
+  allow_non_ascii: false
+  search_width: 64
+  num_adv_string: 5
+  attention_temp: 8
+  use_prefix_cache: false
+  targets_path: /home/romainpopescu/Desktop/cursorProjects/BRASS/data/attacks/slotgcg/strongreject_targets.json
+  eval_steps: 50
+  early_stopping: false
+  early_stopping_min_loss: 0.05
+  eval_with_check_refusal: false
+  check_refusal_min_loss: 0.05
+olmo_slotgcg:
+  target_model:
+    model_name_or_path: allenai/Olmo-3.1-32B-Instruct
+    dtype: bfloat16
+    use_fast_tokenizer: true
+    trust_remote_code: false
+    attn_implementation: eager
+  targets_path: /home/romainpopescu/Desktop/cursorProjects/BRASS/data/attacks/slotgcg/strongreject_targets.json

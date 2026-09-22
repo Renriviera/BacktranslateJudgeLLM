@@ -1,0 +1,9 @@
+# PAIR (Prompt Automatic Iterative Refinement) - Chao et al. 2023, arXiv:2310.08419.
+# Black-box iterative jailbreak: an attacker LLM (default Qwen3-32B, non-thinking) proposes and
+# refines an adversarial prompt over several rounds/streams against the target, scored by an
+# in-loop LLM judge. Generate the cache first with `04_Scripts_Experiments/scripts/attacks/run_pair.py`; this adapter
+# just applies the best cached PAIR prompt per behavior.
+name: pair
+kwargs:
+  cache_path: 06_Results_Artifacts/results/attacks/pair/olmo3_7b_instruct.json
+  strict: false

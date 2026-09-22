@@ -1,0 +1,12 @@
+# Qwen3-32B used as the PAP attack helper (not a BRASS target/judge).
+# Non-thinking mode is requested at generation time via chat_template_kwargs={"enable_thinking": false}
+# in 04_Scripts_Experiments/scripts/attacks/run_pap.py (the flag lives on the chat template, not the engine).
+name: qwen3_32b
+hf_id: Qwen/Qwen3-32B
+is_chat: true
+dtype: bfloat16
+max_model_len: 8192
+gpu_memory_utilization: 0.90
+tensor_parallel_size: 1
+revision: null
+trust_remote_code: true

@@ -1,0 +1,10 @@
+# Preserve imported evidence byte-for-byte, including historical CRLF files.
+* -text
+*.sh text eol=lf
+06_Results_Artifacts/**/*.npz filter=lfs diff=lfs merge=lfs -text
+06_Results_Artifacts/**/*.jsonl filter=lfs diff=lfs merge=lfs -text
+06_Results_Artifacts/**/*.json filter=lfs diff=lfs merge=lfs -text
+# The searchable export inventory stays in ordinary Git.
+06_Results_Artifacts/migration_manifest.json -filter diff -merge text
+06_Results_Artifacts/artifact_index.json -filter diff -merge text
+06_Results_Artifacts/security_audit.json -filter diff -merge text

@@ -1,0 +1,4 @@
+name: orbench
+loader: orbench
+kwargs:
+  variant: or-bench-hard-1k

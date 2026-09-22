@@ -1,0 +1,30 @@
+# @package _global_
+# PAP "Logical Appeal" target + judge run on OLMo-3-7B over the full StrongREJECT set.
+# Consumes the technique-specific cache produced by 04_Scripts_Experiments/scripts/attacks/run_pap.py
+# (--technique logical_appeal). Pair details.json with 04_Scripts_Experiments/scripts/attacks/pap_funnel.py.
+defaults:
+  - /model@subject_model: olmo3_7b_instruct
+  - /model@base_model: olmo3_7b_base
+  - /dataset@dataset: strongreject
+  - /attack@attack: pap
+  - /judge@judges.strongreject: strongreject_ft
+  - /judge@judges.harmbench: harmbench_llama
+  - /metric@metrics.prefix: prefix_asr
+  - /metric@metrics.judge: judge_asr
+  - /metric@metrics.brass: brass
+
+experiment_name: pap_logic_strongreject_olmo3_7b
+
+attack:
+  kwargs:
+    cache_path: 06_Results_Artifacts/results/attacks/pap/olmo3_7b_instruct.logical_appeal.json
+
+sampling:
+  n_prompts: 313        # all StrongREJECT behaviors (matches the PAP cache)
+  n_completions: 16
+  temperature: 1.0
+  top_p: 1.0
+  max_tokens: 256
+  base_max_tokens: 256
+
+system_prompt: null

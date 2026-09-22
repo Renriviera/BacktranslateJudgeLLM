@@ -1,0 +1,5 @@
+2026-09-20T13:17:30.299366Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T13:17:30.321062Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at "/home/romainpopescu/.codex/shell_snapshots/01a0bef6-f32d-7072-9cc9-c41f2e774016.tmp-1789910250286412790": Os { code: 2, kind: NotFound, message: "No such file or directory" }
+2026-09-20T13:17:30.321779Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T13:17:30.342698Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at "/home/romainpopescu/.codex/shell_snapshots/01a0bef6-f24b-7312-b4a0-4f612d03c033.1789910250060562134.sh": Os { code: 2, kind: NotFound, message: "No such file or directory" }
+2026-09-20T13:17:39.671215Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf("/home/romainpopescu/.codex/shell_snapshots/01a0bef6-f337-7ee2-b06d-8abf8756669e.1789910250296187101.sh"): Os { code: 2, kind: NotFound, message: "No such file or directory" }

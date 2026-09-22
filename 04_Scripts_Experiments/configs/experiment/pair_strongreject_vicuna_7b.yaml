@@ -1,0 +1,36 @@
+# @package _global_
+# PAIR judges-only eval on Vicuna-7B-v1.5 over full StrongREJECT.
+# Consumes the cache from 04_Scripts_Experiments/scripts/attacks/run_pair.py --target-model lmsys/vicuna-7b-v1.5.
+defaults:
+  - /model@subject_model: vicuna_7b_v1_5
+  - /model@base_model: olmo3_7b_base
+  - /dataset@dataset: strongreject
+  - /attack@attack: pair
+  - /judge@judges.strongreject: strongreject_ft
+  - /judge@judges.harmbench: harmbench_llama
+  - /metric@metrics.prefix: prefix_asr
+  - /metric@metrics.judge: judge_asr
+  - /metric@metrics.brass: brass
+
+experiment_name: pair_strongreject_vicuna_7b
+
+attack:
+  kwargs:
+    cache_path: 06_Results_Artifacts/results/attacks/pair/vicuna_7b_v1_5.json
+
+sampling:
+  n_prompts: 313
+  n_completions: 16
+  temperature: 1.0
+  top_p: 1.0
+  max_tokens: 256
+  base_max_tokens: 256
+
+system_prompt: null
+
+olmotrace:
+  enabled: false
+
+metrics:
+  brass:
+    enabled: false

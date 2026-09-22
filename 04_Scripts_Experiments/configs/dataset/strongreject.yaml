@@ -1,0 +1,4 @@
+name: strongreject
+loader: strongreject
+kwargs:
+  small: false

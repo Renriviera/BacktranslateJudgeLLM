@@ -1,0 +1,6 @@
+\begin{tikzpicture}\begin{axis}[researchplot,width=14.65cm,height=8.0cm,xmin=0,xmax=6,xtick={0,1,2,3,4,5,6},ymin=0,ymax=0.25,yticklabel style={/pgf/number format/fixed},xlabel={Round trip},ylabel={Cosine distance from previous response},legend pos=north east]
+\addplot+[color=Attack,mark=*,mark options={fill=Attack,draw=Attack},line width=1.6pt] coordinates {(1,0.21606004) (2,0.14508780) (3,0.11624383) (4,0.10128967) (5,0.09176824) (6,0.08791570)};
+\addlegendentry{Attacks}
+\addplot+[color=Reply,mark=*,mark options={fill=Reply,draw=Reply},line width=1.6pt] coordinates {(1,0.20699458) (2,0.12765573) (3,0.10553592) (4,0.09723708) (5,0.09207158) (6,0.08980377)};
+\addlegendentry{Benign}
+\end{axis}\end{tikzpicture}

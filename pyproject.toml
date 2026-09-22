@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "backtranslation-research"
+version = "0.2.0"
+description = "Backtranslation, repeated inversion, judge validation and benign quality controls"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["numpy", "scipy", "pandas", "PyYAML", "hydra-core", "omegaconf", "python-dotenv"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "build", "pre-commit"]
+analysis = ["scikit-learn", "matplotlib==3.10.8", "POT", "sentence-transformers", "datasets"]
+inference = ["vllm==0.22.1", "transformers", "datasets", "huggingface_hub", "accelerate", "sentence-transformers", "wandb", "POT", "matplotlib==3.10.8"]
+sol = ["openai"]
+benchmarks = ["langdetect", "nltk", "absl-py", "immutabledict", "rouge-score"]
+
+[tool.setuptools.packages.find]
+where = ["04_Scripts_Experiments/src"]
+include = ["brass", "brass.*"]
+exclude = ["brass.attacks.external", "brass.attacks.external.*"]
+
+[tool.setuptools.package-data]
+"brass.backtranslation_judge" = ["vendor/*.json", "vendor/*LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["05_Validation_Metrics/tests"]
+pythonpath = ["04_Scripts_Experiments/src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["04_Scripts_Experiments/src/brass/attacks/external", "06_Results_Artifacts"]

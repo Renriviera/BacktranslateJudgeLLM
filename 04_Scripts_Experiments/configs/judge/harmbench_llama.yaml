@@ -1,0 +1,12 @@
+# HarmBench Llama-2-13b classifier judge. Binary yes/no verdict.
+kind: harmbench
+model:
+  name: harmbench_llama
+  hf_id: cais/HarmBench-Llama-2-13b-cls
+  is_chat: false
+  dtype: bfloat16
+  max_model_len: 2048
+  gpu_memory_utilization: 0.90
+  tensor_parallel_size: 1
+  revision: null
+  trust_remote_code: true

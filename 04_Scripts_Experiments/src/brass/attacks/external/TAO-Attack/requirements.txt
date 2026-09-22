@@ -1,0 +1,5 @@
+transformers==4.28.1
+ml_collections
+fschat==0.2.20
+openai==1.105.0
+rouge_score==0.1.2

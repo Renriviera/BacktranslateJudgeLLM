@@ -1,0 +1,13 @@
+kind: brass
+enabled: true
+eps: 1.0e-8
+distances: [mmd, energy, sliced_wasserstein, centroid_cosine]
+compute_likelihood: true
+composite:
+  enabled: true
+  weights:
+    embedding: 1.0
+    likelihood: 1.0
+    logit: 0.0
+    activation: 0.0
+    deflection: 0.0

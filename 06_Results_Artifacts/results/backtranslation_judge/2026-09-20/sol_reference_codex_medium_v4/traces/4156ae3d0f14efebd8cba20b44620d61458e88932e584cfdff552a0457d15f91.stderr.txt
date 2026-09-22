@@ -1,0 +1,4 @@
+2026-09-20T12:49:26.431367Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:49:26.432262Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-20T12:49:26.605289Z ERROR codex_models_manager::manager: failed to refresh available models: exceeded retry limit, last status: 429 Too Many Requests, request id: req_6b3637c14e8c4d6ca5b94ec3bbf2ed4b
+2026-09-20T12:49:38.527322Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf("/home/romainpopescu/.codex/shell_snapshots/01a0bedd-416e-7f00-bb5d-373354c2d727.1789908566383072608.sh"): Os { code: 2, kind: NotFound, message: "No such file or directory" }

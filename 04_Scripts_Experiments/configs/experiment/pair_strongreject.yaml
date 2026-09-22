@@ -1,0 +1,30 @@
+# @package _global_
+# PAIR target + judge run on OLMo-3-7B over the full StrongREJECT set.
+# Consumes the cache produced by 04_Scripts_Experiments/scripts/attacks/run_pair.py (Qwen3-32B attacker+judge vs
+# OLMo-3-7B target). Pair details.json with 04_Scripts_Experiments/scripts/attacks/pair_funnel.py.
+defaults:
+  - /model@subject_model: olmo3_7b_instruct
+  - /model@base_model: olmo3_7b_base
+  - /dataset@dataset: strongreject
+  - /attack@attack: pair
+  - /judge@judges.strongreject: strongreject_ft
+  - /judge@judges.harmbench: harmbench_llama
+  - /metric@metrics.prefix: prefix_asr
+  - /metric@metrics.judge: judge_asr
+  - /metric@metrics.brass: brass
+
+experiment_name: pair_strongreject_olmo3_7b
+
+attack:
+  kwargs:
+    cache_path: 06_Results_Artifacts/results/attacks/pair/olmo3_7b_instruct.json
+
+sampling:
+  n_prompts: 313        # all StrongREJECT behaviors (matches the PAIR cache)
+  n_completions: 16
+  temperature: 1.0
+  top_p: 1.0
+  max_tokens: 256
+  base_max_tokens: 256
+
+system_prompt: null

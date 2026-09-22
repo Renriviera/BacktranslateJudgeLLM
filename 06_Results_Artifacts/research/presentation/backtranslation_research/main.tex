@@ -1,0 +1,230 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\geometry{paperwidth=36cm,paperheight=20.25cm}
+\usepackage{lmodern}\usepackage{fontspec}
+\setsansfont{Noto Sans}[Ligatures=NoCommon]
+\setmainfont{Noto Sans}[Ligatures=NoCommon]
+\setmonofont{DejaVu Sans Mono}[Scale=0.92]
+\newfontfamily\cjkfont{Noto Sans CJK SC}
+\newfontfamily\hindifont{Noto Sans Devanagari}
+\newfontfamily\arabicfont{Noto Sans Arabic}
+\usepackage{amsmath,booktabs,graphicx,tabularx,array,adjustbox,tikz,pgfplots,xurl}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\pgfplotsset{compat=1.18}
+\definecolor{Ink}{HTML}{182B3A}
+\definecolor{Muted}{HTML}{526272}
+\definecolor{Pale}{HTML}{EDF2F5}
+\definecolor{Behavior}{HTML}{3B4F65}
+\definecolor{Attack}{HTML}{9E4C06}
+\definecolor{Output}{HTML}{145AAD}
+\definecolor{Inverse}{HTML}{703F91}
+\definecolor{Reply}{HTML}{007367}
+\definecolor{Judge}{HTML}{A12C52}
+\setbeamercolor{normal text}{fg=Ink,bg=white}
+\setbeamercolor{frametitle}{fg=Ink,bg=white}
+\setbeamercolor{structure}{fg=Output}
+\setbeamercolor{alerted text}{fg=Judge}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{\color{Output}\small\textbullet}
+\setbeamersize{text margin left=1.2cm,text margin right=1.2cm}
+\setbeamerfont{frametitle}{size=\fontsize{28}{34}\selectfont,series=\bfseries}
+\setbeamerfont{framesubtitle}{size=\fontsize{15}{18}\selectfont}
+\setbeamertemplate{frametitle}{\par\vspace{0.25cm}\insertframetitle\par\par\vspace{0.12cm}{\color{Pale}\rule{\textwidth}{1.2pt}}}
+\setbeamertemplate{footline}{\hfill{\color{Muted}\fontsize{10}{12}\selectfont Backtranslation research\hspace{0.7cm}\insertframenumber/\inserttotalframenumber}\hspace{1.2cm}\par\vspace{0.25cm}}
+\renewcommand{\normalsize}{\fontsize{20}{26}\selectfont}
+\renewcommand{\small}{\fontsize{17}{22}\selectfont}
+\renewcommand{\footnotesize}{\fontsize{12}{15}\selectfont}
+\newcommand{\sources}[1]{{\fontsize{10.5}{13}\selectfont\color{Muted}#1\par}}
+\newcommand{\lead}[1]{{\fontsize{24}{30}\selectfont\bfseries #1\par}\par\vspace{0.35cm}}
+\newcommand{\subhead}[1]{{\color{Output}\bfseries #1\par}\par\vspace{0.18cm}}
+\newcommand{\metric}[2]{{\fontsize{33}{38}\selectfont\bfseries\color{Output}#1\par}{\small #2\par}}
+\newcommand{\tightlist}{\setlength\itemsep{0.3cm}}
+\hypersetup{colorlinks=true,urlcolor=Output,linkcolor=Output,pdftitle={Backtranslation: defense, response drift, and jailbreak judging},pdfauthor={BRASS research workspace},pdfsubject={OLMo 7B/32B and StrongREJECT judging studies}}
+\pgfplotsset{researchplot/.style={axis lines=left,axis line style={Muted},tick label style={font=\fontsize{12}{15}\selectfont},label style={font=\fontsize{14}{17}\selectfont},legend style={draw=none,font=\fontsize{13}{16}\selectfont,fill=white},grid=major,grid style={Pale},enlarge x limits=false}}
+\newcommand{\tracelegend}[2]{%
+ {\fontsize{12}{15}\selectfont
+ \textcolor{Behavior}{\textbf{B Behavior}}\hspace{0.45cm}
+ \textcolor{Attack}{\textbf{A Attacked prompt}}\hspace{0.45cm}
+ \textcolor{Output}{\textbf{O Original output}}\hspace{0.45cm}
+ \textcolor{Inverse}{\textbf{I Reconstruction}}\hspace{0.45cm}
+ \textcolor{Reply}{\textbf{R Reconstruction output}}\hspace{0.45cm}
+ \textcolor{Judge}{\textbf{J Judgment}}\hfill\textbf{#1 \quad H #2 vs Sol}\par}\par\vspace{0.18cm}}
+\newcommand{\tracepart}[3]{%
+ {\color{#1}\bfseries #2\par}\par\vspace{2pt}{\color{#1!88!black}#3\par}\par\vspace{6pt}}
+\newsavebox{\tracebox}
+\newdimen\tracefont
+\newdimen\traceleading
+\newcommand{\settracebox}[1]{%
+ \traceleading=\tracefont\multiply\traceleading by 118\divide\traceleading by 100
+ \sbox{\tracebox}{\begin{minipage}[t]{\linewidth}\fontsize{\the\tracefont}{\the\traceleading}\selectfont
+ \raggedright\setlength{\parskip}{1pt}\emergencystretch=1em #1\end{minipage}}}
+\newcommand{\tracecolumn}[2]{%
+ \tracefont=9.7pt\settracebox{#2}%
+ \loop\ifdim\dimexpr\ht\tracebox+\dp\tracebox\relax>14.2cm
+  \advance\tracefont by -0.2pt\settracebox{#2}%
+ \repeat
+ \typeout{TRACEBOX #1 FONT \the\tracefont HEIGHT \the\dimexpr\ht\tracebox+\dp\tracebox\relax}%
+ \begin{adjustbox}{valign=t}\usebox{\tracebox}\end{adjustbox}}
+\newcommand{\prompttext}[1]{{\fontsize{12}{15}\selectfont\raggedright\input{generated/#1.tex}\par}}
+\title{Backtranslation}
+\subtitle{Defense, response drift, and jailbreak judging}
+\date{21 September 2026}
+
+\input{generated/table_macros.tex}
+\begin{document}
+\normalsize
+\begin{frame}[plain]
+ \par\vspace{1.1cm}
+ {\color{Output}\fontsize{18}{23}\selectfont BRASS RESEARCH WORKSPACE\par}
+ \par\vspace{0.55cm}
+ {\fontsize{49}{57}\selectfont\bfseries Backtranslation\par}
+ \par\vspace{0.35cm}
+ {\fontsize{29}{37}\selectfont Defense, response drift,\par and jailbreak judging\par}
+ \par\vspace{1.2cm}
+ \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.30\textwidth}\metric{01}{Repeated OLMo 7B round trips}\end{column}
+  \begin{column}{0.30\textwidth}\metric{02}{Matched OLMo 7B / 32B comparison}\end{column}
+  \begin{column}{0.34\textwidth}\metric{03}{Hybrid ASR judges against a Sol reference}\end{column}
+ \end{columns}
+ \vfill
+ {\small Research recorded 18--20 September 2026\par}
+ {\small Ten complete case studies, with five false positives and five false negatives relative to Sol\par}
+ \par\vspace{0.55cm}
+ \sources{Prior work: Wang, Shi, Bai and Hsieh (2024). Workspace studies developed across the GPT-6 Astra research sessions.}
+\end{frame}
+
+\section{1. Definition and prior work}
+\begin{frame}{1 \quad Backtranslation reconstructs a request from a response}
+ \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.56\textwidth}
+   \lead{Infer what the model actually answered}
+   With target model \(M\), inverter \(B\), input \(x\), and response \(y\):
+   \[y=M(x), \qquad \widehat{x}=B(y), \qquad \widehat{y}=M(\widehat{x}).\]
+   \par\vspace{0.25cm}
+   Backtranslation here means \textbf{response-to-request inversion}. It does not translate between natural languages.
+   \par\vspace{0.5cm}
+   Several requests can explain the same answer. Framing, constraints, or intent that never appear in \(y\) may be unrecoverable.
+  \end{column}
+  \begin{column}{0.39\textwidth}
+   \subhead{Wang et al. (2024)}
+   Yihan Wang, Zhouxing Shi, Andrew Bai, and Cho-Jui Hsieh.\par\par\vspace{0.2cm}
+   \emph{Defending LLMs against Jailbreaking Attacks via Backtranslation}.\par\par\vspace{0.2cm}
+   Findings of ACL 2024, pp.\ 16031--16046.\par\par\vspace{0.35cm}
+   \href{https://arxiv.org/abs/2402.16459}{arXiv:2402.16459}\par\par\vspace{0.5cm}
+   \subhead{Related methods}
+   Robey et al. (2023), \emph{SmoothLLM}.\par\par\vspace{0.18cm}
+   Souly et al. (2024), \emph{A StrongREJECT for Empty Jailbreaks}.
+  \end{column}
+ \end{columns}
+ \vfill
+ \sources{\href{https://aclanthology.org/2024.findings-acl.948/}{Wang et al., Findings of ACL 2024}; \href{https://arxiv.org/abs/2310.03684}{Robey et al., 2023 preprint}; \href{https://arxiv.org/abs/2402.10260}{Souly et al., 2024}.}
+\end{frame}
+
+\section{2. The original defense}
+\begin{frame}{2 \quad Wang's defense uses reconstruction as a refusal probe}
+ \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.53\textwidth}
+   \begin{enumerate}\tightlist
+    \item Generate the original answer \(y=M(x)\).
+    \item If it already refuses, return a fixed refusal.
+    \item Infer a plausible, maximally harmful request \(\widehat{x}=B(y)\).
+    \item If its likelihood check fails, preserve \(y\).
+    \item Otherwise, ask \(M\) to answer \(\widehat{x}\).
+    \item If the new answer refuses, return a fixed refusal. Otherwise return \textbf{the original \(y\)}.
+   \end{enumerate}
+  \end{column}
+  \begin{column}{0.42\textwidth}
+   \lead{A more direct request may expose concealed intent}
+   The attacker controls \(x\). Reconstruction uses the target's own response.
+   \par\vspace{0.55cm}\subhead{Reconstruction plausibility}
+   \[\ell=\frac{1}{N}\sum_{i=1}^{N}\log P_M(y_i\mid\widehat{x},y_{<i}).\]
+   A low likelihood causes the defense to skip the reconstruction, reducing over-refusal.
+   \par\vspace{0.55cm}
+   \textbf{The new answer is a safety probe. The paper keeps the original answer when it accepts.}
+  \end{column}
+ \end{columns}
+ \vfill
+ \sources{Wang et al. (2024), Algorithm 1 and Sections 4.1--4.4. \href{https://arxiv.org/pdf/2402.16459}{Paper} and \href{https://github.com/YihanWang617/llm-jailbreaking-defense}{authors' implementation}.}
+\end{frame}
+
+\begin{frame}{2 \quad Two approaches to removing attack scaffolding}
+ \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.47\textwidth}
+   \subhead{SmoothLLM \quad Robey et al. (2023)}
+   \begin{itemize}\tightlist
+    \item Perturb multiple copies of the input at the character level.
+    \item Query the target on these copies and aggregate their outcomes.
+    \item Exploit the brittleness of some adversarial prompts to small input changes.
+   \end{itemize}
+   \par\vspace{0.5cm}\textbf{Noise is deliberately injected into the input.}
+  \end{column}
+  \begin{column}{0.47\textwidth}
+   \subhead{Backtranslation \quad Wang et al. (2024)}
+   \begin{itemize}\tightlist
+    \item Reconstruct a request from the generated response.
+    \item Query the target on that reconstructed request.
+    \item Use its refusal as a signal about the original interaction.
+   \end{itemize}
+   \par\vspace{0.5cm}\textbf{Reconstruction acts as a semantic denoising step.}
+  \end{column}
+ \end{columns}
+ \par\vspace{0.9cm}{\color{Ink}\rule{\textwidth}{0.6pt}}\par\par\vspace{0.35cm}
+ Shared motivation: remove or disrupt the adversarial component while preserving the task.\par\par\vspace{0.25cm}
+ Backtranslation is related to denoising defenses, but it does not perform SmoothLLM's randomized smoothing.
+ \vfill
+ \sources{\href{https://arxiv.org/abs/2310.03684}{Robey, Wong, Hassani and Pappas (2023), SmoothLLM}; Wang et al. (2024), Sections 2 and 4.}
+\end{frame}
+
+\section{3. Published comparison}
+\begin{frame}{3 \quad Published defense success rates}
+ \begin{columns}[c,onlytextwidth]
+  \begin{column}{0.74\textwidth}\includegraphics[width=\linewidth]{assets/wang_table2.png}\end{column}
+  \begin{column}{0.23\textwidth}
+   \subhead{Read as DSR}
+   Higher is better.\par\par\vspace{0.3cm}
+   \(\mathrm{DSR}=1-\mathrm{ASR}\) under the paper's judge.
+   \par\vspace{0.65cm}
+   Adaptive PAIR remains difficult: backtranslation reaches 76\%, 94\%, and 56\% on the three targets.
+   \par\vspace{0.65cm}
+   These are published defense results on the paper's models and attacks. They are not our OLMo judge error rates.
+  \end{column}
+ \end{columns}
+ \vfill
+ \sources{User-supplied screenshot of Wang et al. (2024), Table 2. Main attack evaluation: 50 curated AdvBench behaviors. GPT-4 judgment protocol differs from StrongREJECT and Sol.}
+\end{frame}
+
+\section{4. Experiment 1: repeated 7B orbits}
+\begin{frame}{4 \quad Repeated inversion produces a large first step, then slower drift}
+ \par{\small 491 prompts: 131 attacks, 240 benign, 120 controls. Eight sampled paths + one greedy path; six round trips.\par}
+ \[x_0\xrightarrow{M}y_0\xrightarrow{B}x_1\xrightarrow{M}y_1\xrightarrow{B}\cdots\xrightarrow{M}y_6\]
+ \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.49\textwidth}\input{generated/drift_curve.tex}\end{column}
+  \begin{column}{0.49\textwidth}\input{generated/step_curve.tex}\end{column}
+ \end{columns}
+ \par\vspace{0.25cm}
+ \textbf{Stationarity after cycle one is not supported.} Distance from the initial answer keeps increasing. Later local movement becomes smaller and similar across the two groups.
+ \vfill
+ \sources{OLMo-3-7B-Instruct for forward and inverse calls. Forward \(T=1.0\), inverse \(T=0.7\). Full-text chunk-pooled MiniLM cosine distance. Curves average paths within prompts, then underlying task groups. Source: main\_core/stability\_chart\_data.json.}
+\end{frame}
+
+\begin{frame}{4 \quad Drift varies widely across attack families and benign benchmarks}
+ \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.54\textwidth}
+   \input{generated/subgroups.tex}\par\vspace{0.2cm}
+   {\small Some benign tasks drift more than the average attack. PAP is more stable geometrically than PAIR and SlotGCG.}
+  \end{column}
+  \begin{column}{0.42\textwidth}
+   \subhead{Additional drift after cycle one}
+   Attacks: \textbf{+0.1260}\par Benign tasks: \textbf{+0.1007}\par\par\vspace{0.25cm}
+   Difference: \textbf{+0.0254}\par 95\% CI [0.0106, 0.0403]\par Holm-adjusted \(p=0.00565\).
+   \par\vspace{0.55cm}\subhead{Later step size, cycles 4--6}
+   0.09366 versus 0.09304.\par Difference CI [\(-0.00831\), 0.00978].\par Adjusted \(p=0.894\).
+   \par\vspace{0.55cm}
+   Greater accumulated drift does not establish a reliable jailbreak detector or greater persistent local instability.
+  \end{column}
+ \end{columns}
+ \vfill
+ \sources{Exploratory main-core analysis, 100 attack behavior groups and 239 usable benign groups. 10,000 task-bootstrap draws, pointwise intervals, Holm correction across six contrasts. Geometry does not measure harmful fulfillment. Source: stability\_update.json and docs/prompt\_response\_orbits\_results\_update.md.}
+\end{frame}
+
+\input{research_results.tex}
+\end{document}

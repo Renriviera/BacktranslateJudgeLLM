@@ -1,0 +1,48 @@
+{
+  "status": "pass",
+  "files_scanned": 18293,
+  "bytes_scanned": 3119916746,
+  "findings": [],
+  "reviewed_example_matches": 549,
+  "reviewed_example_files": 46,
+  "scope": "filesystem excluding VCS, environments and caches",
+  "limitation": "Pattern-based checks are not proof that every possible credential format is absent.",
+  "source_credential_value_comparison": {
+    "status": "pass",
+    "credential_values_compared": 2,
+    "files_compared": 18293,
+    "matching_files": [],
+    "credential_values_exported": false
+  },
+  "post_scan_changes_rechecked": [
+    "README.md",
+    "05_Validation_Metrics/tests/test_tao_reproduction.py",
+    "05_Validation_Metrics/tests/test_fp_perturbations.py",
+    "06_Results_Artifacts/migration_manifest.json"
+  ],
+  "post_scan_change_findings": [],
+  "scanner_sha256": "559b0462a090550e798b2dc78466699e1756180e52a61b40e5eb6482540249c0",
+  "reviewed_example_baseline_sha256": "b98e4be05498269c0ccf39b7df7450319f7e4d5d457636770b7d497b5624865e",
+  "validation": {
+    "tests_passed": 190,
+    "optional_integration_tests_skipped": 1,
+    "empty_cache_focused_tests_passed": 26,
+    "empty_cache_optional_checks_skipped": 5,
+    "detached_copy_tests_before_optional_skip_cleanup": {
+      "passed": 191
+    },
+    "imported_file_integrity": {
+      "checked": 18263,
+      "failures": []
+    },
+    "package_build": "wheel built successfully; use editable source checkout for experiments",
+    "gpu_or_paid_inference_run": false
+  },
+  "empty_local_git_metadata_scan": {
+    "status": "pass",
+    "files_scanned": 23,
+    "bytes_scanned": 27865,
+    "findings": [],
+    "copied_parent_history": false
+  }
+}

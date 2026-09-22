@@ -1,0 +1,36 @@
+# Root Hydra config. Compose an experiment with `experiment=<name>`.
+defaults:
+  - _self_
+  - experiment: smoke_test
+
+# Reproducibility (overridable: `seed=<int>`). Project default per research conventions.
+seed: 235711
+deterministic_torch: false
+
+paths:
+  results_dir: 06_Results_Artifacts/new_runs
+  models_dir: 03_Models/weights
+
+wandb:
+  enabled: false
+  project: brass
+  entity: null
+  mode: offline          # set to "online" in .env / CLI to sync
+  run_name: null
+
+embedding:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  device: null           # null -> auto (GPU if available)
+  batch_size: 64
+
+olmotrace:
+  enabled: false
+  api_url: null          # falls back to env OLMOTRACE_API_URL / public infini-gram
+  index: null
+  max_completions: 10    # trace at most this many completions in the smoke test
+
+hydra:
+  run:
+    dir: ${paths.results_dir}/runs/${now:%Y-%m-%d_%H-%M-%S}
+  job:
+    chdir: false

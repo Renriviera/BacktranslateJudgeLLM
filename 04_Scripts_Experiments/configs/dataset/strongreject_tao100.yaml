@@ -1,0 +1,5 @@
+name: strongreject_tao100
+loader: strongreject
+kwargs:
+  small: false
+  ids_path: 01_Datasets_Benchmarks/data/attacks/tao/strongreject_olmo3_7b_instruct_ids.json

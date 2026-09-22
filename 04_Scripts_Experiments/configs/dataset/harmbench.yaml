@@ -1,0 +1,4 @@
+name: harmbench
+loader: harmbench
+kwargs:
+  functional_category: standard

@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: credentials
+        name: Scan staged content and Git LFS payloads for credentials
+        entry: python3 05_Validation_Metrics/credential_scan.py --staged
+        language: system
+        pass_filenames: false
+        always_run: true
