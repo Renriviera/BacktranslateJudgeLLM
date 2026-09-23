@@ -1,8 +1,8 @@
 # Backtranslation
 
 Research workspace for response-to-prompt inversion, repeated prompt/response cycles,
-judge validation, and benign-task quality loss. Extracted from the BRASS working tree
-on 2026-09-22. The Python namespace remains `brass` to preserve existing imports.
+judge validation, and benign-task quality loss. The Python namespace remains `brass` 
+to preserve existing imports.
 
 ## Start here
 
