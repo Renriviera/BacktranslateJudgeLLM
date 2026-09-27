@@ -30,33 +30,62 @@ There are no links back to the original BRASS checkout and no copied Git history
 ## Setup
 
 Use Python 3.11 or newer; validation was performed with Python 3.12. Use this folder
-as the repository root. Install Git LFS before cloning or adding the historical artifacts.
+as the repository root. On a cluster, load/select a Python 3.12 module first. `uv` can
+manage the project environment and install packages entirely in your user space; no
+administrator access is needed. Point its cache at writable scratch if the home
+directory is read-only.
 
 ```bash
 git lfs install --local
 git lfs pull
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev,analysis,sol,benchmarks]'
-pre-commit install
-python bt.py --help
-python bt.py test
-python bt.py verify-artifacts
-python bt.py audit
+export UV_CACHE_DIR="${SCRATCH:-/tmp/$USER}/uv-cache"
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e '.[dev,analysis,sol,benchmarks]'
+uv run --python .venv/bin/python pre-commit install
+uv run --python .venv/bin/python bt.py --help
+uv run --python .venv/bin/python bt.py test
+uv run --python .venv/bin/python bt.py verify-artifacts
+uv run --python .venv/bin/python bt.py audit
 ```
 
 The offline publication scanner requires only Python's standard library. The full test
 suite imports analysis libraries; optional tokenizer integration checks are explicitly
-skipped when their local model cache/dependencies are absent. GPU generation requires
-the separate `inference` extra.
-`requirements-attacks.txt` preserves the original attack environment, which should be
-installed in a separate `.venv-attacks` environment. These are historical requirements,
-not a universally portable CUDA lockfile. Model download is explicit:
+skipped when their local model cache/dependencies are absent. Some analysis dependencies
+(notably `sentence-transformers`) pull in PyTorch. On clusters, confirm the available
+GPU/CUDA stack before installing; to avoid GPU packages for CPU-only checks, install
+`-e '.[dev,sol,benchmarks]'` instead. GPU generation requires the separate `inference`
+extra; install that only in a GPU environment with a compatible cluster CUDA stack.
+`requirements-attacks.txt` preserves historical attack dependencies; it is not a portable
+CUDA lockfile. For the TAO runner on HPC, use the targeted installer below to add its extra
+packages to the shared `.venv` without replacing the cluster's PyTorch/CUDA stack. Model
+downloads remain explicit:
 
 ```bash
 python bt.py models --list
-python -m pip install -e '.[inference]'
-python bt.py models --only instruct_7b qwen3_32b
+uv pip install --python .venv/bin/python -e '.[inference]'
+uv run --python .venv/bin/python bt.py models --only instruct_7b qwen3_32b
+```
+
+For the full PAP/StrongREJECT semantic reconstruction evaluation, submit the A100 array from
+the repository root:
+
+```bash
+bash 04_Scripts_Experiments/scripts/semantic_reconstruction/submit_one_prompt.sh
+```
+
+The 313-item run used Qwen3-32B for PAP mutation/validity, OLMo-3-7B-Instruct as target, and
+Qwen3.5-9B for response classification and semantic reconstruction. It produced 301 valid
+PAP prompts and 12 mutation refusals; all 301 target responses were classified as refusals.
+The detailed results and partial TAO follow-up are in
+[`semantic_reconstruction_attack_results.md`](04_Scripts_Experiments/docs/semantic_reconstruction_attack_results.md).
+The batch reads `HF_TOKEN` from `.env` and writes raw artifacts and logs under the ignored
+`06_Results_Artifacts/new_runs/semantic_reconstruction/`. Set `HF_HOME` or `SCRATCH` to a
+writable persistent cache location on the cluster.
+
+TAO's targeted HPC dependencies can be added to the shared `.venv` with `uv` (no sudo):
+
+```bash
+bash 04_Scripts_Experiments/scripts/attacks/setup_tao_uv.sh
 ```
 
 Credentials come from your environment or an untracked local `.env` copied from

@@ -177,11 +177,16 @@ def main() -> None:
     ap.add_argument("--dataset", default="strongreject", choices=["strongreject", "harmbench"])
     ap.add_argument("--technique", default="misrepresentation")
     ap.add_argument("--max-behaviors", type=int, default=0, help="0 = all behaviors.")
+    ap.add_argument(
+        "--behavior-id",
+        default=None,
+        help="Run exactly one dataset behavior id (for example strongreject:0).",
+    )
     ap.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    ap.add_argument("--max-tokens", type=int, default=512, help="Max attacker tokens per PAP.")
+    ap.add_argument("--max-tokens", type=int, default=8192, help="Max attacker tokens per PAP.")
     ap.add_argument("--temperature", type=float, default=0.7, help="Qwen3 non-thinking guidance.")
     ap.add_argument("--top-p", type=float, default=0.8)
-    ap.add_argument("--max-model-len", type=int, default=8192)
+    ap.add_argument("--max-model-len", type=int, default=16384)
     ap.add_argument("--gpu-mem", type=float, default=0.90)
     ap.add_argument("--tp", type=int, default=1)
     ap.add_argument("--dtype", default="bfloat16")
@@ -211,7 +216,11 @@ def main() -> None:
     prompts = load_dataset_prompts(args.dataset)
     rng = random.Random(args.seed)
     rng.shuffle(prompts)
-    if args.max_behaviors and args.max_behaviors > 0:
+    if args.behavior_id is not None:
+        prompts = [prompt for prompt in prompts if prompt.id == args.behavior_id]
+        if not prompts:
+            sys.exit(f"Behavior id {args.behavior_id!r} was not found in {args.dataset}.")
+    elif args.max_behaviors and args.max_behaviors > 0:
         prompts = prompts[: args.max_behaviors]
     logger.info(
         "Loaded %d %s behaviors (attacker=%s)", len(prompts), args.dataset, args.attacker_model
@@ -262,7 +271,7 @@ def main() -> None:
                 n=1,
                 temperature=0.0,
                 top_p=1.0,
-                max_tokens=256,
+                max_tokens=8192,
                 seed=args.seed,
                 chat_template_kwargs=chat_kwargs,
             )
@@ -280,7 +289,7 @@ def main() -> None:
                 n=1,
                 temperature=0.0,
                 top_p=1.0,
-                max_tokens=256,
+                max_tokens=8192,
                 seed=args.seed,
                 chat_template_kwargs={"enable_thinking": False},
             )

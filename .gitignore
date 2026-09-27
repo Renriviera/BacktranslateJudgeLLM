@@ -34,4 +34,6 @@ outputs/
 *.pid
 .DS_Store
 06_Results_Artifacts/new_runs/
+# Per-run raw native output from the interrupted StrongREJECT TAO follow-up.
+06_Results_Artifacts/results/attacks/_native/tao/olmo3_7b_instruct_strongreject_semantic_*/
 # Historical results are intentionally versioned, unlike the parent BRASS checkout.

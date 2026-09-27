@@ -464,6 +464,11 @@ def main() -> None:
     )
     ap.add_argument("--data-dir", default=str(REPO / "01_Datasets_Benchmarks/data" / "attacks"))
     ap.add_argument(
+        "--run-tag",
+        default=None,
+        help="Optional suffix for the native results directory, to isolate runs from prior outputs.",
+    )
+    ap.add_argument(
         "--out", default=None, help="Cache JSON path (default 06_Results_Artifacts/results/attacks/tao/<tag>.json)"
     )
     ap.add_argument(
@@ -503,6 +508,8 @@ def main() -> None:
     run_tag = f"{tag}_{args.dataset}"
     if args.dry_run:
         run_tag += "_dry_run"
+    if args.run_tag:
+        run_tag += f"_{args.run_tag}"
     save_folder = REPO / "06_Results_Artifacts/results" / "attacks" / "_native" / "tao" / run_tag
     save_folder.mkdir(parents=True, exist_ok=True)
     default_cache_name = f"{tag}_dry_run.json" if args.dry_run else f"{tag}_{args.dataset}.json"

@@ -9,26 +9,19 @@ converters, the OLMo chat template, and the repo patches are tracked here.
 
 ## Why a separate environment
 
-The repos pin `transformers==4.28/4.44` + `torch==2.4`, which (a) predate `Olmo3ForCausalLM`
-support and (b) lack Blackwell (sm_120) kernels. We therefore run them in an isolated
-**`.venv-attacks`** built on the same modern stack as the main env (torch 2.11+cu130,
-transformers 5.12) plus the attack extras (`fschat` no-deps, `ml_collections`, `rouge_score`,
-`accelerate`, `openai`). One shared venv suffices because, once both repos target OLMo3/Blackwell,
-their original conflicting pins are moot.
+The upstream repos pin old Transformers and PyTorch versions. The HPC TAO workflow uses the
+repository's shared `.venv` with the cluster CUDA/PyTorch stack and passes it explicitly through
+`--attack-python`; this avoids creating another environment or changing the cluster's Torch
+build. Add TAO's extra Python packages with `uv` and no administrator access:
 
 ```bash
-python3 -m venv .venv-attacks
-.venv-attacks/bin/pip install torch==2.11.0 transformers==5.12.0 accelerate sentencepiece \
-    protobuf numpy pandas scipy ml_collections rouge_score shortuuid nltk einops datasets \
-    huggingface_hub openai spacy datasketch
-.venv-attacks/bin/pip install --no-deps fschat==0.2.36
-.venv-attacks/bin/python -m spacy download en_core_web_sm   # SlotGCG eval_utils loads it at import
-# Exact pins captured in requirements-attacks.txt:
-#   .venv-attacks/bin/pip install -r requirements-attacks.txt
+bash 04_Scripts_Experiments/scripts/attacks/setup_tao_uv.sh
 ```
 
-`spacy`/`datasketch`/`en_core_web_sm` are pulled in transitively by SlotGCG's `eval_utils` (loaded
-at import even for step 1); `openai` is imported unconditionally by TAO's `check_openai`.
+`requirements-attacks.txt` is retained as historical provenance, not used wholesale by this
+HPC installer because it would replace core CUDA and inference dependencies. TAO imports
+`openai`, `rouge_score`, and FastChat support at startup; the current cluster `.venv` also needs
+`ml_collections`, `accelerate`, and its dataset/tokenizer helpers.
 
 ## One-time setup
 
@@ -62,7 +55,7 @@ allenai/Olmo-3.1-32B-Instruct` to fall back to the 32B target.
 
 ## Running the optimizers
 
-The runners load the target in `.venv-attacks`, run the optimizer, and merge results into the
+The runners load the target in the selected attack Python, run the optimizer, and merge results into the
 model-scoped cache (keyed by both `"{dataset}:{behavior_id}"` and the raw behavior text, so the
 pipeline's `prompt.id` / `prompt.prompt` lookups both hit).
 
