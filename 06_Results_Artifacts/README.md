@@ -70,3 +70,6 @@ Absolute paths inside historical records are retained for hash fidelity. Active 
 has a resolver for known BRASS artifact paths; old execution queues are historical,
 not portable launch instructions. New experiments belong in ignored `new_runs/` until
 reviewed and archived under a fresh identifier.
+
+For the working directory convention, current semantic reconstruction run inventory,
+and TAO follow-up status, see [new run handling](new_runs/README.md).

@@ -183,6 +183,20 @@ def build_for_dataset(name: str, max_behaviors: int, seed: int, out_dir: Path) -
             len(records),
             tao_path.relative_to(REPO) if tao_path.is_relative_to(REPO) else tao_path,
         )
+        slot_dir = out_dir / "slotgcg"
+        slot_dir.mkdir(parents=True, exist_ok=True)
+        slot_behaviors = slot_dir / "advbench_behaviors.csv"
+        slot_targets = slot_dir / "advbench_targets.json"
+        if not slot_behaviors.exists() or not slot_targets.exists():
+            raise FileNotFoundError(
+                "Missing copied SlotGCG AdvBench-50 snapshot; expected "
+                f"{slot_behaviors} and {slot_targets}"
+            )
+        with slot_behaviors.open(encoding="utf-8", newline="") as src:
+            slot_rows = list(csv.DictReader(src))
+        targets = json.loads(slot_targets.read_text(encoding="utf-8"))
+        if len(slot_rows) != ADVBENCH_EXPECTED_BEHAVIORS or len(records) != len(slot_rows):
+            raise ValueError("I-GCG and SlotGCG AdvBench snapshots must both contain 50 rows")
         return {"behaviors": len(records), "official_targets": len(records)}
 
     prompts = load_dataset_prompts(name)

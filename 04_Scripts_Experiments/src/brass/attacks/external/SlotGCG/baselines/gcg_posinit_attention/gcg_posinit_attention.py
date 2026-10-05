@@ -224,6 +224,7 @@ class GCG_posinit_attention(SingleBehaviorRedTeamingMethod):
 
         all_losses = []
         all_test_cases = []
+        all_step_numbers = []
         all_optim_ids = []
 
         chosen_positions = []
@@ -323,6 +324,7 @@ class GCG_posinit_attention(SingleBehaviorRedTeamingMethod):
 
             test_case = tokenizer.decode(test_case_ids[0])
             all_test_cases.append(test_case)
+            all_step_numbers.append(i)
             current_loss = loss.min().item()
             all_losses.append(current_loss)
             all_optim_ids.append(optim_ids.tolist())
@@ -352,7 +354,7 @@ class GCG_posinit_attention(SingleBehaviorRedTeamingMethod):
             torch.cuda.empty_cache()
             gc.collect()
 
-        logs = {'final_loss': current_loss, 'all_losses': all_losses, 'all_test_cases': all_test_cases, 'all_optim_ids' : all_optim_ids, 'optim_pos': optim_pos.tolist(), 'step_times': step_times, 'position_init_time': pos_init_time,
+        logs = {'final_loss': current_loss, 'all_losses': all_losses, 'all_test_cases': all_test_cases, 'all_step_numbers': all_step_numbers, 'all_optim_ids' : all_optim_ids, 'optim_pos': optim_pos.tolist(), 'step_times': step_times, 'position_init_time': pos_init_time,
                 'chosen_positions': chosen_positions, 'chosen_token_ids': chosen_token_ids, 'chosen_token_texts': chosen_token_texts}
 
         return test_case, logs

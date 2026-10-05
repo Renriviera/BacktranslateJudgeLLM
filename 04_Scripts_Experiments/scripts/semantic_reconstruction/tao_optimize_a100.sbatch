@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
 #SBATCH --time=7-00:00:00
-#SBATCH --output=06_Results_Artifacts/new_runs/semantic_reconstruction/tao-full-%j.out
+#SBATCH --output=06_Results_Artifacts/new_runs/semantic_reconstruction/logs/tao/%x-%j.out
 #SBATCH --chdir=.
 
 set -euo pipefail
@@ -33,8 +33,8 @@ export TOKENIZERS_PARALLELISM=false
 export OMP_NUM_THREADS=1
 export PYTHONUNBUFFERED=1
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
-OUT_DIR="06_Results_Artifacts/new_runs/semantic_reconstruction"
-mkdir -p "$HF_HOME" "$HF_HUB_CACHE" "$OUT_DIR"
+OUT_DIR="${SEMREC_RUN_DIR:-06_Results_Artifacts/new_runs/semantic_reconstruction/local}"
+mkdir -p "$HF_HOME" "$HF_HUB_CACHE" "$OUT_DIR" 06_Results_Artifacts/new_runs/semantic_reconstruction/logs/tao
 
 RUN_ID="${SLURM_JOB_ID:?SLURM_JOB_ID is not set}"
 OUT_CACHE="$OUT_DIR/tao_cache_${RUN_ID}.json"

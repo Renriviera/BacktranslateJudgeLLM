@@ -70,7 +70,7 @@ def main() -> None:
             "source_record": str(source_path.relative_to(ROOT.parent)),
         })
 
-    output = ROOT / "06_Results_Artifacts/new_runs/semantic_reconstruction/pathological_cases.jsonl"
+    output = ROOT / "06_Results_Artifacts/new_runs/semantic_reconstruction/manifests/pathological_cases.jsonl"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("".join(json.dumps(case, ensure_ascii=False) + "\n" for case in cases))
     print(f"Wrote {len(cases)} cases to {output}")

@@ -5,7 +5,8 @@ TASK_ID="${1:?task id is required}"
 RUN_ID="${2:?run id is required}"
 TAO_CACHE_PATH="${3:?TAO cache path is required}"
 DATASET_INDEX="$((TASK_ID - 1))"
-OUT_DIR="06_Results_Artifacts/new_runs/semantic_reconstruction"
+OUT_DIR="${SEMREC_RUN_DIR:-06_Results_Artifacts/new_runs/semantic_reconstruction/local}"
+mkdir -p "$OUT_DIR"
 PROMPT_FILE="$OUT_DIR/tao_prompt_${DATASET_INDEX}_${RUN_ID}.txt"
 ATTACKED_FILE="$OUT_DIR/tao_attacked_${DATASET_INDEX}_${RUN_ID}.txt"
 RESPONSE_FILE="$OUT_DIR/tao_response_${DATASET_INDEX}_${RUN_ID}.txt"
@@ -51,7 +52,6 @@ PY
   --target-max-tokens 8192 \
   --aux-max-tokens 8192 \
   --judge-max-tokens 8192 \
-  --classifier-max-tokens 8192 \
   --max-model-len 16384 \
   --k "${SEMREC_K:-3}" \
   --seed "$((235711 + TASK_ID))" \

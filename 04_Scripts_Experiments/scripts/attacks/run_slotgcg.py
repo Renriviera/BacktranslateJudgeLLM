@@ -31,7 +31,7 @@ import yaml
 REPO = next(p for p in Path(__file__).resolve().parents if (p / "01_Datasets_Benchmarks").is_dir())
 SCRIPTS_ATTACKS = REPO / "04_Scripts_Experiments/scripts" / "attacks"
 SG_DIR = REPO / "04_Scripts_Experiments/src" / "brass" / "attacks" / "external" / "SlotGCG"
-VENV_PY = REPO / ".venv-attacks" / "bin" / "python"
+VENV_PY = REPO / ".venv" / "bin" / "python"
 
 sys.path.insert(0, str(SCRIPTS_ATTACKS))
 from cache_io import merge_cache  # noqa: E402
@@ -79,13 +79,15 @@ def write_method_config(path: Path, model: str, targets_path: Path, args) -> Non
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default=DEFAULT_MODEL)
-    ap.add_argument("--dataset", default="strongreject", choices=["strongreject", "harmbench"])
+    ap.add_argument("--dataset", default="strongreject", choices=["strongreject", "harmbench", "advbench"])
     ap.add_argument("--num-steps", type=int, default=500)
     ap.add_argument("--search-width", type=int, default=512)
     ap.add_argument("--num-adv-string", type=int, default=20)
     ap.add_argument("--attention-temp", type=float, default=8)
     ap.add_argument("--num-test-cases", type=int, default=1)
     ap.add_argument("--max-behaviors", type=int, default=0, help="0 = all behaviors")
+    ap.add_argument("--behavior-index", type=int, default=0,
+                    help="One 1-based behavior row, for per-behavior Slurm arrays; 0 = honor --max-behaviors.")
     # Early-stopping controls (default OFF -> run the full num_steps budget).
     ap.add_argument(
         "--eval-steps",
@@ -121,6 +123,7 @@ def main() -> None:
         help="GPU id, or comma-separated ids for multi-GPU workers (e.g. '0,1,2,3').",
     )
     ap.add_argument("--data-dir", default=str(REPO / "01_Datasets_Benchmarks/data" / "attacks"))
+    ap.add_argument("--native-dir", default=None, help="Override native output directory.")
     ap.add_argument("--out", default=None)
     ap.add_argument(
         "--overwrite",
@@ -152,7 +155,8 @@ def main() -> None:
         )
 
     tag = model_tag(args.model)
-    run_dir = REPO / "06_Results_Artifacts/results" / "attacks" / "_native" / "slotgcg" / f"{tag}_{args.dataset}"
+    default_run_dir = REPO / "06_Results_Artifacts/results" / "attacks" / "_native" / "slotgcg" / f"{tag}_{args.dataset}"
+    run_dir = Path(args.native_dir) if args.native_dir else default_run_dir
     save_dir = run_dir / "test_cases"
     run_dir.mkdir(parents=True, exist_ok=True)
     cfg_path = run_dir / "method_config.gen.yaml"
@@ -166,13 +170,25 @@ def main() -> None:
         rows = list(csv.DictReader(f))
     bid_to_behavior = {r["BehaviorID"]: r["Behavior"] for r in rows}
 
+    selected_index = None
+    if args.behavior_index:
+        if not 1 <= args.behavior_index <= len(rows):
+            sys.exit(f"--behavior-index must be in 1..{len(rows)}")
+        selected_index = args.behavior_index - 1
+        rows = [rows[args.behavior_index - 1]]
+        args.max_behaviors = 0
     total = len(rows)
     if args.max_behaviors and args.max_behaviors > 0:
         total = min(args.max_behaviors, total)
+    # The upstream CLI slices the full CSV, so array tasks must preserve the original row index.
+    # `rows` is narrowed above only for behavior lookup and result collection.
+    shards = (
+        [(selected_index, selected_index + 1)]
+        if selected_index is not None
+        else slice_ranges(total, args.num_workers)
+    )
     # Disjoint contiguous behavior slices, one per parallel worker (all share the GPU + save_dir;
     # SlotGCG writes per-behavior subdirs so concurrent workers never collide).
-    shards = slice_ranges(total, args.num_workers)
-
     def build_cmd(start: int, end: int) -> list[str]:
         cmd = [
             str(VENV_PY),
@@ -230,33 +246,26 @@ def main() -> None:
         if any(rc != 0 for rc in rcs):
             sys.exit(f"[run_slotgcg] {sum(rc != 0 for rc in rcs)} worker(s) failed; see logs.")
 
-    # Collect per-behavior outputs: save_dir/test_cases_individual_behaviors/<bid>/test_cases.json
+    # Aggregate adapter caches only for full runs. Array runs keep each behavior isolated.
     indiv = save_dir / "test_cases_individual_behaviors"
-    if not indiv.exists():
-        sys.exit(f"[run_slotgcg] no outputs at {indiv}")
-
-    items = []
-    for bid_dir in sorted(indiv.iterdir()):
-        tc_file = bid_dir / "test_cases.json"
-        if not tc_file.exists():
-            continue
-        tc = json.loads(tc_file.read_text(encoding="utf-8"))
-        for bid, cases in tc.items():
-            if not cases:
+    if selected_index is None:
+        if not indiv.exists():
+            sys.exit(f"[run_slotgcg] no outputs at {indiv}")
+        items = []
+        for bid_dir in sorted(indiv.iterdir()):
+            tc_file = bid_dir / "test_cases.json"
+            if not tc_file.exists():
                 continue
-            items.append(
-                {
-                    "bid": bid,
-                    "behavior": bid_to_behavior.get(bid, ""),
-                    "attacked_prompt": cases[0],
-                    "extra": {"attack": "slotgcg", "all_test_cases": cases},
-                }
-            )
-
-    if not items:
-        sys.exit("[run_slotgcg] produced no test cases")
-    n = merge_cache(out_path, args.dataset, items)
-    print(f"[run_slotgcg] merged {n} behaviors ({args.dataset}) -> {out_path}")
+            tc = json.loads(tc_file.read_text(encoding="utf-8"))
+            for bid, cases in tc.items():
+                if cases:
+                    items.append({"bid": bid, "behavior": bid_to_behavior.get(bid, ""),
+                                  "attacked_prompt": cases[0],
+                                  "extra": {"attack": "slotgcg", "all_test_cases": cases}})
+        if not items:
+            sys.exit("[run_slotgcg] produced no test cases")
+        n = merge_cache(out_path, args.dataset, items)
+        print(f"[run_slotgcg] merged {n} behaviors ({args.dataset}) -> {out_path}")
 
 
 if __name__ == "__main__":

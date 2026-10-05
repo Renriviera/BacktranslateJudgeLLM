@@ -3,8 +3,6 @@ import itertools
 import re
 from ast import literal_eval
 
-import spacy
-from datasketch import MinHash
 from tqdm import tqdm
 
 # ============================== UTILS FOR EXPANDING EXPERIMENT TEMPLATES ============================== #
@@ -213,15 +211,17 @@ def get_experiment_config(experiment_name, model_configs, method_configs):
 
 # ============================== UTILS FOR COPYRIGHT CLASSIFIER ============================== #
 
-# Load spaCy model
-nlp = spacy.load("en_core_web_sm")  # TODO: move this somewhere nicer
-nlp.max_length = 10000000
-
 def tokenize(text):
+    import spacy
+
+    nlp = spacy.load("en_core_web_sm")
+    nlp.max_length = 10000000
     doc = nlp(text)
     return [token.text for token in doc]
 
 def compute_hashes_with_sliding_window(text, window_size=300, overlap=200):
+    from datasketch import MinHash
+
     """
     This function takes in a string and returns a list of MinHashes for the string
 

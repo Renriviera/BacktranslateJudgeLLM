@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Full StrongREJECT PAP attack/classification array, one A100 per behavior; max four concurrent.
+# Full StrongREJECT PAP attack/reconstruction array, one A100 per behavior; max four concurrent.
 # Submit from the repository root with submit_one_prompt.sh.
-#SBATCH --job-name=pap-semantic-classifier
+#SBATCH --job-name=pap-semantic-reconstruction
 #SBATCH --partition=gpu-a100-q
 #SBATCH --gres=gpu:a100:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=48G
 #SBATCH --time=04:00:00
 #SBATCH --array=1-313%4
-#SBATCH --output=06_Results_Artifacts/new_runs/semantic_reconstruction/pap-semantic-%A_%a.out
+#SBATCH --output=06_Results_Artifacts/new_runs/semantic_reconstruction/logs/pap/%x-%A_%a.out
 #SBATCH --chdir=.
 
 set -euo pipefail
@@ -46,8 +46,10 @@ export HF_HOME="${HF_HOME:-${SCRATCH:-$HOME}/hf-cache}"
 export HF_HUB_CACHE="${HF_HUB_CACHE:-$HF_HOME/hub}"
 export VLLM_WORKER_MULTIPROC_METHOD="${VLLM_WORKER_MULTIPROC_METHOD:-spawn}"
 mkdir -p "$HF_HOME" "$HF_HUB_CACHE"
+mkdir -p 06_Results_Artifacts/new_runs/semantic_reconstruction/logs/pap
 
-OUT_DIR="06_Results_Artifacts/new_runs/semantic_reconstruction"
+OUT_DIR="${SEMREC_RUN_DIR:-06_Results_Artifacts/new_runs/semantic_reconstruction/local}"
+mkdir -p "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 TASK_ID="${SLURM_ARRAY_TASK_ID:-1}"
 DATASET_INDEX="$((TASK_ID - 1))"
@@ -91,7 +93,6 @@ fi
   --target-max-tokens 8192 \
   --aux-max-tokens 8192 \
   --judge-max-tokens 8192 \
-  --classifier-max-tokens 8192 \
   --max-model-len 16384 \
   --k "${SEMREC_K:-3}" \
   --seed "$((235711 + TASK_ID))" \

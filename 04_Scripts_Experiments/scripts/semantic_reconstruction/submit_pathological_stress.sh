@@ -3,9 +3,10 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$REPO_ROOT"
-mkdir -p 06_Results_Artifacts/new_runs/semantic_reconstruction
+BASE_DIR="06_Results_Artifacts/new_runs/semantic_reconstruction"
+mkdir -p "$BASE_DIR/logs/pathological-hardneg" "$BASE_DIR/manifests"
 python3 04_Scripts_Experiments/scripts/semantic_reconstruction/prepare_pathological_cases.py
-CASE_COUNT="$(wc -l < 06_Results_Artifacts/new_runs/semantic_reconstruction/pathological_cases.jsonl)"
+CASE_COUNT="$(wc -l < "$BASE_DIR/manifests/pathological_cases.jsonl")"
 if [[ "$CASE_COUNT" -lt 1 ]]; then
   echo "No pathological cases were generated." >&2
   exit 2

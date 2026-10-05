@@ -8,7 +8,7 @@
 #SBATCH --mem=48G
 #SBATCH --time=04:00:00
 #SBATCH --array=1-34%4
-#SBATCH --output=06_Results_Artifacts/new_runs/semantic_reconstruction/pathological-%A_%a.out
+#SBATCH --output=06_Results_Artifacts/new_runs/semantic_reconstruction/logs/pathological/%x-%A_%a.out
 #SBATCH --chdir=.
 
 set -euo pipefail
@@ -33,10 +33,10 @@ fi
 export HF_HOME="${HF_HOME:-${SCRATCH:-$HOME}/hf-cache}"
 export HF_HUB_CACHE="${HF_HUB_CACHE:-$HF_HOME/hub}"
 export VLLM_WORKER_MULTIPROC_METHOD="${VLLM_WORKER_MULTIPROC_METHOD:-spawn}"
-mkdir -p "$HF_HOME" "$HF_HUB_CACHE" 06_Results_Artifacts/new_runs/semantic_reconstruction
+mkdir -p "$HF_HOME" "$HF_HUB_CACHE" 06_Results_Artifacts/new_runs/semantic_reconstruction/logs/pathological
 
 OUT_DIR="06_Results_Artifacts/new_runs/semantic_reconstruction"
-CASES="$OUT_DIR/pathological_cases.jsonl"
+CASES="$OUT_DIR/manifests/pathological_cases.jsonl"
 .venv/bin/python 04_Scripts_Experiments/scripts/semantic_reconstruction/pathological_stress.py \
   --cases "$CASES" \
   --case-index "$SLURM_ARRAY_TASK_ID" \
